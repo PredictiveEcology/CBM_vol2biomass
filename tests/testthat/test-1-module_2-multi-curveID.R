@@ -1,12 +1,12 @@
 
 if (!testthat::is_testing()) source(testthat::test_path("setup.R"))
 
-test_that("Module runs with defaults", {
+test_that("Module runs with multiple curveID", {
 
   ## Run simInit and spades ----
 
   # Set up project
-  projectName <- "1-defaults"
+  projectName <- "2-multi-curveID"
 
   simInitInput <- SpaDES.project::setupProject(
 
@@ -20,9 +20,22 @@ test_that("Module runs with defaults", {
       outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
     ),
 
+    curveID = c("species", "moisture"),
+
     userGcSPU = data.frame(
       spatial_unit_id = 28,
-      curveID         = 22
+      species         = "Balsam Fir",
+      moisture        = 50
+    ),
+    userGcMeta = data.frame(
+      curveID     = 22,
+      species     = "Balsam Fir",
+      moisture    = 50
+    ),
+    userGcM3 = data.frame(
+      curveID     = 22,
+      Age         = 0:250,
+      MerchVolume = 0:250
     )
   )
 
@@ -48,7 +61,7 @@ test_that("Module runs with defaults", {
   expect_true(!is.null(simTest$cPoolsClean))
   expect_true(inherits(simTest$cPoolsClean, "data.table"))
 
-  expect_true("28_22" %in% simTest$cPoolsClean$gcids)
+  expect_true("28_Balsam Fir_50" %in% simTest$cPoolsClean$gcids)
 
 
   ## Check output 'gcMeta' ---
@@ -56,7 +69,7 @@ test_that("Module runs with defaults", {
   expect_true(!is.null(simTest$gcMeta))
   expect_true(inherits(simTest$gcMeta, "data.table"))
 
-  expect_true("28_22" %in% simTest$gcMeta$gcids)
+  expect_true("28_Balsam Fir_50" %in% simTest$gcMeta$gcids)
 
 
   ## Check output 'growth_increments' ----
@@ -64,7 +77,7 @@ test_that("Module runs with defaults", {
   expect_true(!is.null(simTest$growth_increments))
   expect_true(inherits(simTest$growth_increments, "data.table"))
 
-  expect_true("28_22" %in% simTest$growth_increments$gcids)
+  expect_true("28_Balsam Fir_50" %in% simTest$growth_increments$gcids)
 
 })
 
