@@ -1,12 +1,12 @@
 
 if (!testthat::is_testing()) source(testthat::test_path("setup.R"))
 
-test_that("Multi module: SK-small 1998-2000", {
+test_that("Multi module: SK-small", {
 
   ## Run simInit and spades ----
 
   # Set up project
-  projectName <- "integration_SK-small_1998-2000"
+  projectName <- "integration_SK-small"
   times       <- list(start = 1985, end = 1985)
 
   simInitInput <- SpaDEStestMuffleOutput(
