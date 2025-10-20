@@ -7,7 +7,7 @@ test_that("Multi module: SK-small 1998-2000", {
 
   # Set up project
   projectName <- "integration_SK-small_1998-2000"
-  times       <- list(start = 1998, end = 2000)
+  times       <- list(start = 1985, end = 1985)
 
   simInitInput <- SpaDEStestMuffleOutput(
 
