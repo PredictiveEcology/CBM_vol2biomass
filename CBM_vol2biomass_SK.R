@@ -177,12 +177,24 @@ Init <- function(sim) {
   sim$userGcMeta <- data.table::as.data.table(sim$userGcMeta)
   sim$userGcM3   <- data.table::as.data.table(sim$userGcM3)
 
-  ## SK: always include gc ID 55
-  if (any(c(27, 28) %in% sim$userGcSPU$spatial_unit_id) && 55 %in% sim$userGcMeta$curveID){
-    sim$userGcSPU <- unique(data.table::rbindlist(list(
-      sim$userGcSPU,
-      data.frame(spatial_unit_id = 28, curveID = 55)
-    ), fill = TRUE))
+  ## SK: always convert trembling aspen with site productivity class "G"
+  if (any(c(27, 28) %in% sim$userGcSPU$spatial_unit_id)){
+
+    if (55 %in% sim$userGcMeta$curveID & !"prodClass" %in% names(sim$userGcMeta)){
+
+      # Legacy SK growth curve tables
+      sim$userGcSPU <- unique(data.table::rbindlist(list(
+        sim$userGcSPU,
+        data.frame(spatial_unit_id = 28, curveID = 55)
+      ), fill = TRUE))
+
+    }else{
+
+      sim$userGcSPU <- unique(data.table::rbindlist(list(
+        sim$userGcSPU,
+        data.frame(spatial_unit_id = 28, species = "Trembling aspen", prodClass = "G")
+      ), fill = TRUE))
+    }
   }
 
   ## user provides userGcM3: incoming cumulative m3/ha.
@@ -322,29 +334,55 @@ Init <- function(sim) {
   ## fol and other columns in gcids 37 and 58, will be replace by the fol and
   ## other of gcids 55.
   ## The user will have to decide which curves to replace and with what in their own study areas.
-  if (any(cPoolsRaw$gcids == "27_37")) {
-    cPoolsRaw[gcids == "27_37", fol   := cPoolsRaw[gcids == "28_55", fol]]
-    cPoolsRaw[gcids == "27_37", other := cPoolsRaw[gcids == "28_55", other]]
-  }
-  if (any(cPoolsRaw$gcids == "28_58")) {
-    cPoolsRaw[gcids == "28_58", fol   := cPoolsRaw[gcids == "28_55", fol]]
-    cPoolsRaw[gcids == "28_58", other := cPoolsRaw[gcids == "28_55", other]]
-  }
-  if (any(cPoolsRaw$gcids == "27_58")) {
-    cPoolsRaw[gcids == "27_58", fol   := cPoolsRaw[gcids == "28_55", fol]]
-    cPoolsRaw[gcids == "27_58", other := cPoolsRaw[gcids == "28_55", other]]
-  }
-  if (any(cPoolsRaw$gcids == "27_38")) {
-    cPoolsRaw[gcids == "27_38", fol   := cPoolsRaw[gcids == "28_55", fol]]
-    cPoolsRaw[gcids == "27_38", other := cPoolsRaw[gcids == "28_55", other]]
-  }
-  if (any(cPoolsRaw$gcids == "27_39")) {
-    cPoolsRaw[gcids == "27_39", fol   := cPoolsRaw[gcids == "28_55", fol]]
-    cPoolsRaw[gcids == "27_39", other := cPoolsRaw[gcids == "28_55", other]]
-  }
-  if (any(cPoolsRaw$gcids == "28_60")) {
-    cPoolsRaw[gcids == "28_60", fol   := cPoolsRaw[gcids == "28_55", fol]]
-    cPoolsRaw[gcids == "28_60", other := cPoolsRaw[gcids == "28_55", other]]
+  if (any(c(27, 28) %in% sim$userGcSPU$spatial_unit_id)){
+
+    if (55 %in% sim$userGcMeta$curveID & !"prodClass" %in% names(sim$userGcMeta)){
+
+      # Legacy SK growth curve tables
+      if (any(cPoolsRaw$gcids == "27_37")) {
+        cPoolsRaw[gcids == "27_37", fol   := cPoolsRaw[gcids == "28_55", fol]]
+        cPoolsRaw[gcids == "27_37", other := cPoolsRaw[gcids == "28_55", other]]
+      }
+      if (any(cPoolsRaw$gcids == "28_58")) {
+        cPoolsRaw[gcids == "28_58", fol   := cPoolsRaw[gcids == "28_55", fol]]
+        cPoolsRaw[gcids == "28_58", other := cPoolsRaw[gcids == "28_55", other]]
+      }
+      if (any(cPoolsRaw$gcids == "27_58")) {
+        cPoolsRaw[gcids == "27_58", fol   := cPoolsRaw[gcids == "28_55", fol]]
+        cPoolsRaw[gcids == "27_58", other := cPoolsRaw[gcids == "28_55", other]]
+      }
+      if (any(cPoolsRaw$gcids == "27_38")) {
+        cPoolsRaw[gcids == "27_38", fol   := cPoolsRaw[gcids == "28_55", fol]]
+        cPoolsRaw[gcids == "27_38", other := cPoolsRaw[gcids == "28_55", other]]
+      }
+      if (any(cPoolsRaw$gcids == "27_39")) {
+        cPoolsRaw[gcids == "27_39", fol   := cPoolsRaw[gcids == "28_55", fol]]
+        cPoolsRaw[gcids == "27_39", other := cPoolsRaw[gcids == "28_55", other]]
+      }
+      if (any(cPoolsRaw$gcids == "28_60")) {
+        cPoolsRaw[gcids == "28_60", fol   := cPoolsRaw[gcids == "28_55", fol]]
+        cPoolsRaw[gcids == "28_60", other := cPoolsRaw[gcids == "28_55", other]]
+      }
+
+    }else{
+
+      # Legacy 28_55
+      treID  <- sim$gcMeta[spatial_unit_id == 28 & species == "Trembling aspen" & prodClass == "G",]$gcids
+      treRaw <- cPoolsRaw[gcids == treID,]
+
+      replaceIDs <- c(
+        sim$gcMeta[spatial_unit_id == 27 & species == "Paper birch" & prodClass == "G",]$gcids, # Legacy 27_37
+        sim$gcMeta[spatial_unit_id == 28 & species == "Paper birch" & prodClass == "G",]$gcids, # Legacy 28_58
+        sim$gcMeta[spatial_unit_id == 27 & species == "Paper birch" & prodClass == "G",]$gcids, # Legacy 27_58
+        sim$gcMeta[spatial_unit_id == 27 & species == "Paper birch" & prodClass == "M",]$gcids, # Legacy 27_38
+        sim$gcMeta[spatial_unit_id == 27 & species == "Paper birch" & prodClass == "P",]$gcids, # Legacy 27_39
+        sim$gcMeta[spatial_unit_id == 28 & species == "Paper birch" & prodClass == "P",]$gcids  # Legacy 28_60
+      )
+      for (replaceID in intersect(replaceIDs, cPoolsRaw$gcids)){
+        cPoolsRaw[gcids == replaceID, fol   := treRaw[, fol]]
+        cPoolsRaw[gcids == replaceID, other := treRaw[, other]]
+      }
+    }
   }
 
   # Smooth curves
