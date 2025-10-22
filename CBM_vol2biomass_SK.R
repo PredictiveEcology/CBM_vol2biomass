@@ -19,7 +19,7 @@ defineModule(sim, list(
   documentation = deparse(list("README.txt", "CBM_vol2biomass_SK.Rmd")),
   reqdPkgs = list(
     "PredictiveEcology/CBMutils@development (>=2.0.3.0007)",
-    "ggforce", "ggplot2", "ggpubr", "googledrive", "mgcv", "quickPlot", "robustbase", "data.table", "patchwork"
+    "ggforce", "ggplot2", "ggpubr", "mgcv", "quickPlot", "robustbase", "data.table", "patchwork"
   ),
   parameters = rbind(
     defineParameter(
@@ -173,6 +173,7 @@ Init <- function(sim) {
     }
   }
 
+  sim$cbmAdmin   <- data.table::as.data.table(sim$cbmAdmin)
   sim$userGcSPU  <- data.table::as.data.table(sim$userGcSPU)
   sim$userGcMeta <- data.table::as.data.table(sim$userGcMeta)
   sim$userGcM3   <- data.table::as.data.table(sim$userGcM3)

@@ -1,0 +1,49 @@
+AdminBoundaryID,stump_parameter_id,adminName,abreviation,SpatialUnitID,EcoBoundaryID
+1,1,Newfoundland  ,NF,1,17
+2,2,Labrador,NF,3,16
+2,2,Labrador,NF,4,17
+3,3,Nova Scotia,NS,5,7
+4,4,Prince Edward Island,PE,6,7
+5,5,New Brunswick,NB,7,7
+6,6,Quebec,QC,11,7
+6,6,Quebec,QC,12,8
+6,6,Quebec,QC,13,15
+6,6,Quebec,QC,14,16
+6,6,Quebec,QC,15,17
+7,7,Ontario,ON,16,6
+7,7,Ontario,ON,17,8
+7,7,Ontario,ON,18,15
+7,7,Ontario,ON,19,17
+8,8,Manitoba,MB,21,5
+8,8,Manitoba,MB,22,6
+8,8,Manitoba,MB,23,9
+8,8,Manitoba,MB,24,10
+8,8,Manitoba,MB,25,15
+9,9,Saskatchewan,SK,26,5
+9,9,Saskatchewan,SK,27,6
+9,9,Saskatchewan,SK,28,9
+9,9,Saskatchewan,SK,29,10
+9,9,Saskatchewan,SK,30,18
+10,10,Alberta,AB,31,4
+10,10,Alberta,AB,32,5
+10,10,Alberta,AB,33,6
+10,10,Alberta,AB,34,9
+10,10,Alberta,AB,35,10
+10,10,Alberta,AB,36,14
+10,10,Alberta,AB,37,18
+11,11,British Columbia,BC,38,4
+11,11,British Columbia,BC,39,9
+11,11,British Columbia,BC,40,12
+11,11,British Columbia,BC,41,13
+11,11,British Columbia,BC,42,14
+12,12,Yukon Territory,YK,44,4
+12,12,Yukon Territory,YK,45,11
+12,12,Yukon Territory,YK,46,12
+12,12,Yukon Territory,YK,47,13
+13,13,Northwest Territories,NT,50,4
+13,13,Northwest Territories,NT,51,5
+13,13,Northwest Territories,NT,52,9
+13,13,Northwest Territories,NT,53,11
+13,13,Northwest Territories,NT,54,12
+14,14,Nunavut,NU,58,5
+14,14,Nunavut,NU,59,15

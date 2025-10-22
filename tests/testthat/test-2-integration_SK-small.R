@@ -1,12 +1,12 @@
 
 if (!testthat::is_testing()) source(testthat::test_path("setup.R"))
 
-test_that("Multi module: SK-small", {
+test_that("Integration: SK", {
 
   ## Run simInit and spades ----
 
   # Set up project
-  projectName <- "integration_SK-small"
+  projectName <- "integration-SK"
   times       <- list(start = 1985, end = 1985)
 
   simInitInput <- SpaDEStestMuffleOutput(
@@ -29,8 +29,9 @@ test_that("Multi module: SK-small", {
         cachePath   = spadesTestPaths$cachePath,
         outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
       ),
+      params = list(CBM_vol2biomass_SK = list(.useCache = FALSE)),
 
-      require = "terra",
+      require = c("googledrive", "terra"),
 
       masterRaster = terra::rast(
         ext  = c(xmin = -687696, xmax = -681036, ymin = 711955, ymax = 716183),

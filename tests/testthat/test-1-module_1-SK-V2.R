@@ -1,12 +1,12 @@
 
 if (!testthat::is_testing()) source(testthat::test_path("setup.R"))
 
-test_that("Module runs with multiple curveID", {
+test_that("Module: SK curves: V2", {
 
   ## Run simInit and spades ----
 
   # Set up project
-  projectName <- "2-multi-curveID"
+  projectName <- "1-SK-V2"
 
   simInitInput <- SpaDES.project::setupProject(
 
@@ -19,23 +19,17 @@ test_that("Module runs with multiple curveID", {
       cachePath   = spadesTestPaths$cachePath,
       outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
     ),
+    params = list(CBM_vol2biomass_SK = list(.useCache = FALSE)),
 
-    curveID = c("species", "moisture"),
+    cbmAdmin   = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
+    userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcMeta.csv")),
+    userGcM3   = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcM3.csv")),
 
-    userGcSPU = data.frame(
-      spatial_unit_id = 28,
-      species         = "Balsam Fir",
-      moisture        = 50
-    ),
-    userGcMeta = data.frame(
-      curveID     = 22,
-      species     = "Balsam Fir",
-      moisture    = 50
-    ),
-    userGcM3 = data.frame(
-      curveID     = 22,
-      Age         = 0:250,
-      MerchVolume = 0:250
+    curveID   = c("species", "prodClass"),
+    userGcSPU = rbind(
+      data.frame(spatial_unit_id = 27, species = "Trembling aspen", prodClass = "M"),
+      data.frame(spatial_unit_id = 28, species = "Trembling aspen", prodClass = "P"),
+      data.frame(spatial_unit_id = 28, species = "Jack pine",       prodClass = "P")
     )
   )
 
@@ -61,7 +55,9 @@ test_that("Module runs with multiple curveID", {
   expect_true(!is.null(simTest$cPoolsClean))
   expect_true(inherits(simTest$cPoolsClean, "data.table"))
 
-  expect_true("28_Balsam Fir_50" %in% simTest$cPoolsClean$gcids)
+  expect_true("27_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
+  expect_true("28_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
+  expect_true("28_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
 
 
   ## Check output 'gcMeta' ---
@@ -69,7 +65,9 @@ test_that("Module runs with multiple curveID", {
   expect_true(!is.null(simTest$gcMeta))
   expect_true(inherits(simTest$gcMeta, "data.table"))
 
-  expect_true("28_Balsam Fir_50" %in% simTest$gcMeta$gcids)
+  expect_true("27_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
+  expect_true("28_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
+  expect_true("28_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
 
 
   ## Check output 'growth_increments' ----
@@ -77,7 +75,9 @@ test_that("Module runs with multiple curveID", {
   expect_true(!is.null(simTest$growth_increments))
   expect_true(inherits(simTest$growth_increments, "data.table"))
 
-  expect_true("28_Balsam Fir_50" %in% simTest$growth_increments$gcids)
+  expect_true("27_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
+  expect_true("28_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
+  expect_true("28_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
 
 })
 

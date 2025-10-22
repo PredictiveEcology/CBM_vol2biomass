@@ -1,0 +1,25 @@
+species,prodClass,curveID,species_id,sw_hw,canfi_species,genus
+Balsam fir,G,1,29,sw,302,ABIE
+Balsam fir,M,1,29,sw,302,ABIE
+Balsam fir,P,1,29,sw,302,ABIE
+Balsam poplar,G,2,65,hw,1203,POPU
+Balsam poplar,M,2,65,hw,1203,POPU
+Balsam poplar,P,2,65,hw,1203,POPU
+Black spruce,G,3,2,sw,101,PICE
+Black spruce,M,4,2,sw,101,PICE
+Black spruce,P,4,2,sw,101,PICE
+Coniferous,G,5,194,sw,1100,
+Coniferous,M,5,194,sw,1100,
+Coniferous,P,5,194,sw,1100,
+Jack pine,G,5,14,sw,203,PINU
+Jack pine,M,5,14,sw,203,PINU
+Jack pine,P,5,14,sw,203,PINU
+Paper birch,G,8,76,hw,1303,BETU
+Paper birch,M,8,76,hw,1303,BETU
+Paper birch,P,8,76,hw,1303,BETU
+Trembling aspen,G,6,63,hw,1201,POPU
+Trembling aspen,M,7,63,hw,1201,POPU
+Trembling aspen,P,7,63,hw,1201,POPU
+White spruce,G,9,6,sw,105,PICE
+White spruce,M,10,6,sw,105,PICE
+White spruce,P,10,6,sw,105,PICE
