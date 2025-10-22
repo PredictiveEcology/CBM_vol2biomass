@@ -392,46 +392,6 @@ Init <- function(sim) {
     sim$curveID <- "curveID"
   }
 
-  if (!suppliedElsewhere("userGcMeta", sim)) {
-    if (!suppliedElsewhere("userGcMetaURL", sim)) {
-      sim$userGcMetaURL <- extractURL("userGcMeta")
-    }
-
-    sim$userGcMeta <- prepInputs(url = sim$userGcMetaURL,
-                                 targetFile = "gcMetaEg.csv",
-                                 destinationPath = inputPath(sim),
-                                 fun = fread,
-                                 purge = 7
-    )
-    data.table::setnames(sim$userGcMeta, "gcids", "curveID")
-    data.table::setkey(sim$userGcMeta, curveID)
-
-    sim$userGcMeta[, sw_hw := data.table::fifelse(forest_type_id == 1, "sw", "hw")]
-  }
-
-  if (!suppliedElsewhere("userGcM3", sim)){
-
-    if (suppliedElsewhere("userGcM3URL", sim)){
-
-      sim$userGcM3 <- prepInputs(url = sim$userGcM3URL,
-                                 destinationPath = inputPath(sim),
-                                 fun = "data.table::fread")
-
-    }else{
-
-      message("User has not supplied growth curves ('userGcM3' or 'userGcM3URL'). ",
-              "Defaults for Saskatchewan will be used.")
-
-      sim$userGcM3 <- prepInputs(url = extractURL("userGcM3"),
-                                 destinationPath = inputPath(sim),
-                                 targetFile = "userGcM3.csv",
-                                 fun = "data.table::fread")
-      data.table::setnames(sim$userGcM3, names(sim$userGcM3), c("curveID", "Age", "MerchVolume"))
-      data.table::setkeyv(sim$userGcM3, c("curveID", "Age"))
-
-    }
-  }
-
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
   # abbreviation and cbm spatial units and ecoBoudnary id is provided with the
   # adminName to avoid confusion.
