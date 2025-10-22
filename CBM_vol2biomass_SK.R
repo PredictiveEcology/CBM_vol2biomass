@@ -63,9 +63,6 @@ defineModule(sim, list(
       objectName = "userGcMeta", objectClass = "data.frame",
       desc = "Growth curve metadata with columns 'curveID' and all columns named by `curveID`"),
     expectsInput(
-      objectName = "userGcMetaURL", objectClass = "character",
-      desc = "URL for userGcMeta"),
-    expectsInput(
       objectName = "userGcM3", objectClass = "data.frame",
       desc = "Growth curve volumes with columns 'curveID', `Age`, and `MerchVolume`."),
     expectsInput(
