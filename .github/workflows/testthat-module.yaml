@@ -35,10 +35,6 @@ jobs:
 
     steps:
 
-      - name: Check for Google Authorization
-        if: ${{ env.GOOGLE_AUTH == '' }}
-        run: exit 1
-
       - uses: actions/checkout@v4
 
       - uses: PredictiveEcology/actions/install-spatial-deps@v0.2
@@ -59,7 +55,6 @@ jobs:
         with:
          packages: |
           any::testthat
-          any::googledrive
 
       - uses: PredictiveEcology/actions/install-Require@v0.2
         with:
@@ -69,7 +64,6 @@ jobs:
 
       - name: Run tests
         run: |
-          googledrive::drive_auth(path = Sys.getenv("GOOGLE_AUTH"))
           testthat::test_dir("tests/testthat", filter = "integration", invert = TRUE, stop_on_failure = TRUE)
         shell: Rscript {0}
 
