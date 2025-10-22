@@ -164,7 +164,7 @@ Init <- function(sim) {
   if (!all(reqCols$userGcM3 %in% names(sim$userGcM3))) stop(
     "userGcM3 must have columns: ", paste(shQuote(reqCols$userGcM3), collapse = ", "))
 
-  if (!all(sim$userGcM3$curveID %in% sim$userGcMeta$curveID)) {
+  if (!all(sim$userGcMeta$curveID %in% sim$userGcM3$curveID)) {
     stop("There is a missmatch in the 'curveID' columns of userGcMeta and the userGcM3")
   }
   for (col in sim$curveID){
