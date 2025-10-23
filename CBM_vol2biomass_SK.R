@@ -385,11 +385,6 @@ Init <- function(sim) {
 
 .inputObjects <- function(sim) {
 
-  # Growth and yield
-  if (!suppliedElsewhere("curveID", sim)) {
-    sim$curveID <- "curveID"
-  }
-
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
   # abbreviation and cbm spatial units and ecoBoudnary id is provided with the
   # adminName to avoid confusion.
