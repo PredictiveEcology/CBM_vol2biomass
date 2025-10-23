@@ -18,7 +18,7 @@ defineModule(sim, list(
   citation = list("citation.bib"),
   documentation = deparse(list("README.txt", "CBM_vol2biomass_SK.Rmd")),
   reqdPkgs = list(
-    "PredictiveEcology/CBMutils@development (>=2.0.3.0007)",
+    "PredictiveEcology/CBMutils@development (>=2.3.2.9001)",
     "ggforce", "ggplot2", "ggpubr", "mgcv", "quickPlot", "robustbase", "data.table", "patchwork"
   ),
   parameters = rbind(
@@ -384,11 +384,6 @@ Init <- function(sim) {
 }
 
 .inputObjects <- function(sim) {
-
-  # Growth and yield
-  if (!suppliedElsewhere("curveID", sim)) {
-    sim$curveID <- "curveID"
-  }
 
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
   # abbreviation and cbm spatial units and ecoBoudnary id is provided with the
