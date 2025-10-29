@@ -129,17 +129,24 @@ defineModule(sim, list(
 doEvent.CBM_vol2biomass_SK <- function(sim, eventTime, eventType) {
   switch(
     eventType,
+
     init = {
 
-      sim <- Init(sim)
-
+      sim <- scheduleEvent(sim, start(sim), "CBM_vol2biomass_SK", "vol2biomass", eventPriority = 5)
     },
+
+    vol2biomass = {
+
+      sim <- ReadInputs(sim)
+      sim <- Vol2Biomass(sim)
+    },
+
     warning(noEventWarning(sim))
   )
   return(invisible(sim))
 }
 
-Init <- function(sim) {
+ReadInputs <- function(sim) {
 
   # Check input
   if ("gcids" %in% sim$curveID)           stop("'curveID' cannot contain \"gcids\"")
@@ -172,6 +179,28 @@ Init <- function(sim) {
   sim$userGcSPU  <- data.table::as.data.table(sim$userGcSPU)
   sim$userGcMeta <- data.table::as.data.table(sim$userGcMeta)
   sim$userGcM3   <- data.table::as.data.table(sim$userGcM3)
+
+  ## Check that all required columns are available, and if not, add them:
+  if (any(!c("canfi_species", "sw_hw", "genus") %in% names(sim$userGcMeta))){
+
+    sppMatchTable <- CBMutils::sppMatch(
+      sim$userGcMeta$species, return = c("CanfiCode", "NFI", "Broadleaf"))[, .(
+        canfi_species = CanfiCode,
+        sw_hw         = data.table::fifelse(Broadleaf, "hw", "sw"),
+        genus         = sapply(strsplit(NFI, "_"), `[[`, 1)
+      )]
+
+    sim$userGcMeta <- cbind(
+      sim$userGcMeta[, .SD, .SDcols = setdiff(names(sim$userGcMeta), names(sppMatchTable))],
+      sppMatchTable)
+    rm(sppMatchTable)
+  }
+
+  return(invisible(sim))
+
+}
+
+Vol2Biomass <- function(sim){
 
   ## user provides userGcM3: incoming cumulative m3/ha.
   ## table needs 3 columns: gcids, Age, MerchVolume
@@ -218,33 +247,11 @@ Init <- function(sim) {
   stable6 <- boudewynSubsetTables(sim$table6, thisAdmin, thisAdmin$EcoBoundaryID)
   stable7 <- boudewynSubsetTables(sim$table7, thisAdmin, thisAdmin$EcoBoundaryID)
 
-  # END reducing Biomass model parameter tables -----------------------------------------------
 
-  # START Reading in user provided meta data for growth curves --------------------------------------------
-  # This could be a complete data frame with the same columns as gcMetaEg.csv OR is could be only curve
-  # id and species.
+  # START processing curves -------------------------------------------
 
-  ## Check that all required columns are available, and if not, add them:
-  if (any(!c("canfi_species", "sw_hw", "genus") %in% names(sim$userGcMeta))){
-
-    sppMatchTable <- CBMutils::sppMatch(
-      sim$userGcMeta$species, return = c("CanfiCode", "NFI", "Broadleaf"))[, .(
-        canfi_species = CanfiCode,
-        sw_hw         = data.table::fifelse(Broadleaf, "hw", "sw"),
-        genus         = sapply(strsplit(NFI, "_"), `[[`, 1)
-      )]
-
-    sim$userGcMeta <- cbind(
-      sim$userGcMeta[, .SD, .SDcols = setdiff(names(sim$userGcMeta), names(sppMatchTable))],
-      sppMatchTable)
-    rm(sppMatchTable)
-  }
-
-
-  # END Reading in user provided meta data for growth curves -----------------------------------------------
-
-  # START processing curves from m3/ha to tonnes of C/ha then to annual increments
-  # per above ground biomass pools -------------------------------------------
+  # Process curves from m3/ha to tonnes of C/ha then to annual increments
+  # per above ground biomass pools
 
   # Create a new unique key defining each growth curve and spatial_unit_id
   sim$userGcSPU <- cbind(
