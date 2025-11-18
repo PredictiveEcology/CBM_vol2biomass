@@ -12,7 +12,7 @@ name: testthat-module
 
 jobs:
   testthat-module:
-    if: "!contains(github.event.commits[0].message, '[skip-ci]')"
+    if: "github.ref == 'refs/heads/main' || !contains(github.event.commits[0].message, '[skip-ci]')"
     runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
@@ -35,10 +35,6 @@ jobs:
 
     steps:
 
-      - name: Check for Google Authorization
-        if: ${{ env.GOOGLE_AUTH == '' }}
-        run: exit 1
-
       - uses: actions/checkout@v4
 
       - uses: PredictiveEcology/actions/install-spatial-deps@v0.2
@@ -59,17 +55,24 @@ jobs:
         with:
          packages: |
           any::testthat
-          any::googledrive
 
-      - uses: PredictiveEcology/actions/install-Require@v0.2
-        with:
-          GitTag: 'development'
+      ## TEMPORARY: use reproducible@AI and SpaDES.core@box with LandR@development
 
-      - uses: PredictiveEcology/actions/install-SpaDES@v0.2
+      # - uses: PredictiveEcology/actions/install-Require@v0.2
+      #   with:
+      #     GitTag: 'development'
+      #
+      # - uses: PredictiveEcology/actions/install-SpaDES@v0.2
+
+      - name: Install reproducible@AI and SpaDES.core@box
+        run: |
+          install.packages("remotes")
+          remotes::install_github("PredictiveEcology/reproducible@AI")
+          remotes::install_github("PredictiveEcology/SpaDES.core@box")
+        shell: Rscript {0}
 
       - name: Run tests
         run: |
-          googledrive::drive_auth(path = Sys.getenv("GOOGLE_AUTH"))
           testthat::test_dir("tests/testthat", filter = "integration", invert = TRUE, stop_on_failure = TRUE)
         shell: Rscript {0}
 
