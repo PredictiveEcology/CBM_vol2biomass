@@ -238,6 +238,13 @@ Vol2Biomass <- function(sim){
 
   thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% na.omit(sim$userGcSPU$spatial_unit_id), ]
 
+
+  ## TEMPORARY: Current Boudewyn tables label Yukon as YT instead of YK. This hard coded fix ensures they are properly labeled as YK
+  sim$table3[juris_id == "YT", juris_id := "YK"]
+  sim$table4[juris_id == "YT", juris_id := "YK"]
+  sim$table6[juris_id == "YT", juris_id := "YK"]
+  sim$table7[juris_id == "YT", juris_id := "YK"]
+
   # subsetting Boudewyn tables to the ecozones/admin boundaries of the study area.
   # Some ecozones/boundaries are not in these tables, in these cases, the function replaces them in
   # thisAdmin to the closest equivalent present in the Boudewyn tables.
