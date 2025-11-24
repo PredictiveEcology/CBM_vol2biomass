@@ -240,19 +240,19 @@ Vol2Biomass <- function(sim){
 
 
   ## TEMPORARY: Current Boudewyn tables label Yukon as YT instead of YK. This hard coded fix ensures they are properly labeled as YK
-  sim$table3 -> as.data.table(sim$table3)[juris_id == "YT", juris_id := "YK"]
-  sim$table4 -> as.data.table(sim$table4)[juris_id == "YT", juris_id := "YK"]
-  sim$table6 -> as.data.table(sim$table6)[juris_id == "YT", juris_id := "YK"]
-  sim$table7 -> as.data.table(sim$table7)[juris_id == "YT", juris_id := "YK"]
+  table3 -> sim$table3$juris_id[sim$table3$juris_id == "YT"] <- "YK"
+  table4 -> sim$table4$juris_id[sim$table4$juris_id == "YT"] <- "YK"
+  table6 -> sim$table6$juris_id[sim$table6$juris_id == "YT"] <- "YK"
+  table7 -> sim$table7$juris_id[sim$table7$juris_id == "YT"] <- "YK"
 
   # subsetting Boudewyn tables to the ecozones/admin boundaries of the study area.
   # Some ecozones/boundaries are not in these tables, in these cases, the function replaces them in
   # thisAdmin to the closest equivalent present in the Boudewyn tables.
-  stable3 <- boudewynSubsetTables(sim$table3, thisAdmin, thisAdmin$EcoBoundaryID)
-  stable4 <- boudewynSubsetTables(sim$table4, thisAdmin, thisAdmin$EcoBoundaryID)
-  stable5 <- boudewynSubsetTables(sim$table5, thisAdmin, thisAdmin$EcoBoundaryID)
-  stable6 <- boudewynSubsetTables(sim$table6, thisAdmin, thisAdmin$EcoBoundaryID)
-  stable7 <- boudewynSubsetTables(sim$table7, thisAdmin, thisAdmin$EcoBoundaryID)
+  stable3 <- boudewynSubsetTables(table3, thisAdmin, thisAdmin$EcoBoundaryID)
+  stable4 <- boudewynSubsetTables(table4, thisAdmin, thisAdmin$EcoBoundaryID)
+  stable5 <- boudewynSubsetTables(table5, thisAdmin, thisAdmin$EcoBoundaryID)
+  stable6 <- boudewynSubsetTables(table6, thisAdmin, thisAdmin$EcoBoundaryID)
+  stable7 <- boudewynSubsetTables(table7, thisAdmin, thisAdmin$EcoBoundaryID)
 
 
   # START processing curves -------------------------------------------
