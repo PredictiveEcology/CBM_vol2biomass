@@ -184,10 +184,12 @@ ReadInputs <- function(sim) {
   if (any(!c("canfi_species", "sw_hw", "genus") %in% names(sim$userGcMeta))){
 
     sppMatchTable <- CBMutils::sppMatch(
-      sim$userGcMeta$species, return = c("CanfiCode", "NFI", "Broadleaf"))[, .(
+      sim$userGcMeta$species, return = c("CanfiCode", "Latin_full", "Broadleaf"))[, .(
         canfi_species = CanfiCode,
         sw_hw         = data.table::fifelse(Broadleaf, "hw", "sw"),
-        genus         = sapply(strsplit(NFI, "_"), `[[`, 1)
+        genus         = toupper(
+          sapply(strsplit(latinFull, ""), function(x) paste(x[1:4], collapse = ""))
+        )
       )]
 
     sim$userGcMeta <- cbind(
