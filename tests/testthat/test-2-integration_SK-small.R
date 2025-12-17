@@ -17,7 +17,7 @@ test_that("Integration: SK", {
         paste0("PredictiveEcology/CBM_defaults@",    Sys.getenv("BRANCH_NAME", "development")),
         paste0("PredictiveEcology/CBM_dataPrep_SK@", Sys.getenv("BRANCH_NAME", "development")),
         paste0("PredictiveEcology/CBM_dataPrep@",    Sys.getenv("BRANCH_NAME", "development")),
-        "CBM_vol2biomass_SK",
+        "CBM_vol2biomass",
         paste0("PredictiveEcology/CBM_core@",        Sys.getenv("BRANCH_NAME", "development"))
       ),
       times   = times,
@@ -29,7 +29,7 @@ test_that("Integration: SK", {
         cachePath   = spadesTestPaths$cachePath,
         outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
       ),
-      params = list(CBM_vol2biomass_SK = list(.useCache = FALSE)),
+      params = list(CBM_vol2biomass = list(.useCache = FALSE)),
 
       require = c("googledrive", "terra"),
 

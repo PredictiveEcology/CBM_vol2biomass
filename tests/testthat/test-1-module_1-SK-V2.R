@@ -10,7 +10,7 @@ test_that("Module: SK curves: V2", {
 
   simInitInput <- SpaDES.project::setupProject(
 
-    modules = "CBM_vol2biomass_SK",
+    modules = "CBM_vol2biomass",
     paths   = list(
       projectPath = spadesTestPaths$projectPath,
       modulePath  = spadesTestPaths$modulePath,
@@ -19,7 +19,7 @@ test_that("Module: SK curves: V2", {
       cachePath   = spadesTestPaths$cachePath,
       outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
     ),
-    params = list(CBM_vol2biomass_SK = list(.useCache = FALSE)),
+    params = list(CBM_vol2biomass = list(.useCache = FALSE)),
 
     cbmAdmin   = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
     userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcMeta.csv")),
