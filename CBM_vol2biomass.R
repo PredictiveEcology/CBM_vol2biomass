@@ -1,5 +1,5 @@
 defineModule(sim, list(
-  name = "CBM_vol2biomass_SK",
+  name = "CBM_vol2biomass",
   description = paste("A module to prepare the user-provided growth and yield information for use",
                       "in the family of models spadesCBM - CBM-CFS3-like simulation of forest",
                       "carbon in the platform SpaDES. This module takes in user-provided m3/ha",
@@ -12,11 +12,11 @@ defineModule(sim, list(
     person("Susan",   "Murray",    email = "murray.e.susan@gmail.com",           role = c("ctb"))
   ),
   childModules = character(0),
-  version = list(CBM_vol2biomass_SK = "0.0.0.9000"),
+  version = list(CBM_vol2biomass = "0.0.0.9000"),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list("citation.bib"),
-  documentation = deparse(list("README.txt", "CBM_vol2biomass_SK.Rmd")),
+  documentation = deparse(list("README.txt", "CBM_vol2biomass.Rmd")),
   reqdPkgs = list(
     "PredictiveEcology/CBMutils@development (>=2.4.2.9000)",
     "ggforce", "ggplot2", "ggpubr", "mgcv", "quickPlot", "robustbase", "data.table", "patchwork"
@@ -126,13 +126,13 @@ defineModule(sim, list(
   )
 ))
 
-doEvent.CBM_vol2biomass_SK <- function(sim, eventTime, eventType) {
+doEvent.CBM_vol2biomass <- function(sim, eventTime, eventType) {
   switch(
     eventType,
 
     init = {
 
-      sim <- scheduleEvent(sim, start(sim), "CBM_vol2biomass_SK", "vol2biomass", eventPriority = 5)
+      sim <- scheduleEvent(sim, start(sim), "CBM_vol2biomass", "vol2biomass", eventPriority = 5)
     },
 
     vol2biomass = {
