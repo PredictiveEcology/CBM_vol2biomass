@@ -1,5 +1,5 @@
 ---
-title: "CBM_vol2biomass_SK"
+title: "CBM_vol2biomass"
 author:
   - Celine Boisvenue
   - Camille Giuliano
@@ -12,10 +12,10 @@ editor_options:
 ---
 ```{r setup-CBM_vol2biomass, include = FALSE}
 ```
-# CBM_vol2biomass_SK
+# CBM_vol2biomass
 
 :::{.rmdimportant}
-This documentation is work in progress. Potential discrepancies and omissions may exist for the time being. If you find any, please contact us [here]("https://github.com/PredictiveEcology/CBM_vol2biomass_SK/issues").
+This documentation is work in progress. Potential discrepancies and omissions may exist for the time being. If you find any, please contact us [here]("https://github.com/PredictiveEcology/CBM_vol2biomass/issues").
 :::
 
 ## Overview
@@ -137,7 +137,7 @@ Where:
 
 - $b_snm = b_nm + b_s$
 
-- $k$, $a$, and $b$ are model parameters fit separately by jurisdiction, ecozone, and lead tree species (Table 5 in @boudewyn2007). Note that sparse data resulted in incomplete coverage of managed forests of Canada. Module users have to decide on parameter selection appropriate for their study area, as we do in our  [CBM_vol2biomass_SK](https://github.com/PredictiveEcology/CBM_vol2biomass_SK.git) example.
+- $k$, $a$, and $b$ are model parameters fit separately by jurisdiction, ecozone, and lead tree species (Table 5 in @boudewyn2007). Note that sparse data resulted in incomplete coverage of managed forests of Canada. Module users have to decide on parameter selection appropriate for their study area, as we do in our  [CBM_vol2biomass](https://github.com/PredictiveEcology/CBM_vol2biomass.git) example.
 
 Proportions of total tree biomass in stem wood, stem bark, branches and foliage for live trees of all sizes are calculated with Equations 4, 5, 6, and 7 respectively ([`CBMutils::biomProp()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L154) returns a vector of proportion that matches Eq. 4, 5, 6 and 7 in Figure 1 and is used in [`CBMutils::convertM3biom()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L259)).
 
@@ -179,44 +179,6 @@ The module automatically plots both the direct translation (no smoothing `totMer
 | growth_increments | Data table | growth increment matrix |
 | gcMetaAllCols     | Data table | `gcMeta` with ecozones |
 | volCurves         | Plot |  Plots of all growth curves provided by the user |
-
-
-## Usage
-
-This module can be run independently. The global script below runs the module for the managed forests of Saskatchewan. Inputs would have to be adapted by the user to be run elsewhere. 
-
-```{r module_vol2biomass_usage, eval=FALSE}
-#project path and package install
-projectPath <- "~/CBM_vol2biomass_SK"
-repos <- unique(c("predictiveecology.r-universe.dev", getOption("repos")))
-install.packages("SpaDES.project",
-                 repos = repos)
-
-#setup
-out <- SpaDES.project::setupProject(
-  paths = list(projectPath = projectPath),
-  overwrite = TRUE,
-  
-  options = options(
-    repos = c(repos = repos),
-    reproducible.destinationPath = "inputs"
-  ),
-  modules =  c("PredictiveEcology/CBM_vol2biomass_SK@development"),
-  require = c("SpaDES.core"),
-  
-  
-  ######### inputs #########
-  
-  spatialDT = data.table(
-    gcids = c(55, 49, 52, 58, 28, 37, 34, 31, 40, 61, 50, 35, 29, 56, 62),
-    spatial_unit_id = c(28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 27, 27, 28, 28),
-    ecozones = c(9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 6, 6, 9, 9)),
-
-#run
-simBiomass <- simInitAndSpades2(out)
-
-```
-
 
 
 ## Links to other modules  
