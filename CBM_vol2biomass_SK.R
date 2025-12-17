@@ -336,6 +336,8 @@ Vol2Biomass <- function(sim){
 
   # 4. Calculating Increments
   incCols <- c("incMerch", "incFol", "incOther")
+  cPoolsClean <- copy(cPoolsClean) #TEMP FIX: making a copy of this table deals with the shallow table warning that happens in the line below.
+  ## This warning likely originates from how the table is dealt with in cumPoolsSmooth or cumPoolsCreate.
   cPoolsClean[, (incCols) := lapply(.SD, function(x) c(NA, diff(x))), .SDcols = colNames,
                 by = eval("gcids")]
   colsToUse33 <- c("age", "gcids", incCols)
