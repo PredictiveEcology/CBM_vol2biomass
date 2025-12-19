@@ -1,13 +1,13 @@
 
 if (!testthat::is_testing()) source(testthat::test_path("setup.R"))
 
-test_that("Multi module: SK-small 1998-2000", {
+test_that("Integration: SK", {
 
   ## Run simInit and spades ----
 
   # Set up project
-  projectName <- "integration_SK-small_1998-2000"
-  times       <- list(start = 1998, end = 2000)
+  projectName <- "integration-SK"
+  times       <- list(start = 1985, end = 1985)
 
   simInitInput <- SpaDEStestMuffleOutput(
 
@@ -17,7 +17,7 @@ test_that("Multi module: SK-small 1998-2000", {
         paste0("PredictiveEcology/CBM_defaults@",    Sys.getenv("BRANCH_NAME", "development")),
         paste0("PredictiveEcology/CBM_dataPrep_SK@", Sys.getenv("BRANCH_NAME", "development")),
         paste0("PredictiveEcology/CBM_dataPrep@",    Sys.getenv("BRANCH_NAME", "development")),
-        "CBM_vol2biomass_SK",
+        "CBM_vol2biomass",
         paste0("PredictiveEcology/CBM_core@",        Sys.getenv("BRANCH_NAME", "development"))
       ),
       times   = times,
@@ -29,8 +29,9 @@ test_that("Multi module: SK-small 1998-2000", {
         cachePath   = spadesTestPaths$cachePath,
         outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
       ),
+      params = list(CBM_vol2biomass = list(.useCache = FALSE)),
 
-      require = "terra",
+      require = c("googledrive", "terra"),
 
       masterRaster = terra::rast(
         ext  = c(xmin = -687696, xmax = -681036, ymin = 711955, ymax = 716183),

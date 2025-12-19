@@ -1,5 +1,5 @@
 defineModule(sim, list(
-  name = "CBM_vol2biomass_SK",
+  name = "CBM_vol2biomass",
   description = paste("A module to prepare the user-provided growth and yield information for use",
                       "in the family of models spadesCBM - CBM-CFS3-like simulation of forest",
                       "carbon in the platform SpaDES. This module takes in user-provided m3/ha",
@@ -12,14 +12,14 @@ defineModule(sim, list(
     person("Susan",   "Murray",    email = "murray.e.susan@gmail.com",           role = c("ctb"))
   ),
   childModules = character(0),
-  version = list(CBM_vol2biomass_SK = "0.0.0.9000"),
+  version = list(CBM_vol2biomass = "0.0.0.9000"),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list("citation.bib"),
-  documentation = deparse(list("README.txt", "CBM_vol2biomass_SK.Rmd")),
+  documentation = deparse(list("README.txt", "CBM_vol2biomass.Rmd")),
   reqdPkgs = list(
-    "PredictiveEcology/CBMutils@development (>=2.0.3.0007)",
-    "ggforce", "ggplot2", "ggpubr", "googledrive", "mgcv", "quickPlot", "robustbase", "data.table", "patchwork"
+    "PredictiveEcology/CBMutils@development (>=2.4.2.9000)",
+    "ggforce", "ggplot2", "ggpubr", "mgcv", "quickPlot", "robustbase", "data.table", "patchwork"
   ),
   parameters = rbind(
     defineParameter(
@@ -61,15 +61,10 @@ defineModule(sim, list(
       desc = "Growth curve locations with columns 'spatial_unit_id' and all columns named by `curveID`"),
     expectsInput(
       objectName = "userGcMeta", objectClass = "data.frame",
-      desc = "Growth curve metadata with columns 'curveID' and all columns named by `curveID`",
-      sourceURL = "https://drive.google.com/file/d/1ugECJVNkglSSQFVqnk5ayG6q38l6AWe9"),
-    expectsInput(
-      objectName = "userGcMetaURL", objectClass = "character",
-      desc = "URL for userGcMeta"),
+      desc = "Growth curve metadata with columns 'curveID' and all columns named by `curveID`"),
     expectsInput(
       objectName = "userGcM3", objectClass = "data.frame",
-      desc = "Growth curve volumes with columns 'curveID', `Age`, and `MerchVolume`.",
-      sourceURL = "https://drive.google.com/file/d/13s7fo5Ue5ji0aGYRQcJi-_wIb2-4bgVN"),
+      desc = "Growth curve volumes with columns 'curveID', `Age`, and `MerchVolume`."),
     expectsInput(
       objectName = "cbmAdmin", objectClass = "data.frame",
       desc = paste("Provides equivalent between provincial boundaries,",
@@ -131,20 +126,27 @@ defineModule(sim, list(
   )
 ))
 
-doEvent.CBM_vol2biomass_SK <- function(sim, eventTime, eventType) {
+doEvent.CBM_vol2biomass <- function(sim, eventTime, eventType) {
   switch(
     eventType,
+
     init = {
 
-      sim <- Init(sim)
-
+      sim <- scheduleEvent(sim, start(sim), "CBM_vol2biomass", "vol2biomass", eventPriority = 5)
     },
+
+    vol2biomass = {
+
+      sim <- ReadInputs(sim)
+      sim <- Vol2Biomass(sim)
+    },
+
     warning(noEventWarning(sim))
   )
   return(invisible(sim))
 }
 
-Init <- function(sim) {
+ReadInputs <- function(sim) {
 
   # Check input
   if ("gcids" %in% sim$curveID)           stop("'curveID' cannot contain \"gcids\"")
@@ -164,7 +166,7 @@ Init <- function(sim) {
   if (!all(reqCols$userGcM3 %in% names(sim$userGcM3))) stop(
     "userGcM3 must have columns: ", paste(shQuote(reqCols$userGcM3), collapse = ", "))
 
-  if (!all(sim$userGcM3$curveID %in% sim$userGcMeta$curveID)) {
+  if (!all(sim$userGcMeta$curveID %in% sim$userGcM3$curveID)) {
     stop("There is a missmatch in the 'curveID' columns of userGcMeta and the userGcM3")
   }
   for (col in sim$curveID){
@@ -173,17 +175,32 @@ Init <- function(sim) {
     }
   }
 
+  sim$cbmAdmin   <- data.table::as.data.table(sim$cbmAdmin)
   sim$userGcSPU  <- data.table::as.data.table(sim$userGcSPU)
   sim$userGcMeta <- data.table::as.data.table(sim$userGcMeta)
   sim$userGcM3   <- data.table::as.data.table(sim$userGcM3)
 
-  ## SK: always include gc ID 55
-  if (any(c(27, 28) %in% sim$userGcSPU$spatial_unit_id) && 55 %in% sim$userGcMeta$curveID){
-    sim$userGcSPU <- unique(data.table::rbindlist(list(
-      sim$userGcSPU,
-      data.frame(spatial_unit_id = 28, curveID = 55)
-    ), fill = TRUE))
+  ## Check that all required columns are available, and if not, add them:
+  if (any(!c("canfi_species", "sw_hw", "genus") %in% names(sim$userGcMeta))){
+
+    sppMatchTable <- CBMutils::sppMatch(
+      sim$userGcMeta$species, return = c("CanfiCode", "Genus", "Broadleaf"))[, .(
+        canfi_species = CanfiCode,
+        sw_hw         = data.table::fifelse(Broadleaf, "hw", "sw"),
+        genus         = Genus
+      )]
+
+    sim$userGcMeta <- cbind(
+      sim$userGcMeta[, .SD, .SDcols = setdiff(names(sim$userGcMeta), names(sppMatchTable))],
+      sppMatchTable)
+    rm(sppMatchTable)
   }
+
+  return(invisible(sim))
+
+}
+
+Vol2Biomass <- function(sim){
 
   ## user provides userGcM3: incoming cumulative m3/ha.
   ## table needs 3 columns: gcids, Age, MerchVolume
@@ -221,6 +238,13 @@ Init <- function(sim) {
 
   thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% na.omit(sim$userGcSPU$spatial_unit_id), ]
 
+
+  ## TEMPORARY: Current Boudewyn tables label Yukon as YT instead of YK. This hard coded fix ensures they are properly labeled as YK
+  sim$table3$juris_id[sim$table3$juris_id == "YT"] <- "YK"
+  sim$table4$juris_id[sim$table4$juris_id == "YT"] <- "YK"
+  sim$table6$juris_id[sim$table6$juris_id == "YT"] <- "YK"
+  sim$table7$juris_id[sim$table7$juris_id == "YT"] <- "YK"
+
   # subsetting Boudewyn tables to the ecozones/admin boundaries of the study area.
   # Some ecozones/boundaries are not in these tables, in these cases, the function replaces them in
   # thisAdmin to the closest equivalent present in the Boudewyn tables.
@@ -230,33 +254,11 @@ Init <- function(sim) {
   stable6 <- boudewynSubsetTables(sim$table6, thisAdmin, thisAdmin$EcoBoundaryID)
   stable7 <- boudewynSubsetTables(sim$table7, thisAdmin, thisAdmin$EcoBoundaryID)
 
-  # END reducing Biomass model parameter tables -----------------------------------------------
 
-  # START Reading in user provided meta data for growth curves --------------------------------------------
-  # This could be a complete data frame with the same columns as gcMetaEg.csv OR is could be only curve
-  # id and species.
+  # START processing curves -------------------------------------------
 
-  ## Check that all required columns are available, and if not, add them:
-  if (any(!c("canfi_species", "sw_hw", "genus") %in% names(sim$userGcMeta))){
-
-    sppMatchTable <- CBMutils::sppMatch(
-      sim$userGcMeta$species, return = c("CanfiCode", "NFI", "Broadleaf"))[, .(
-        canfi_species = CanfiCode,
-        sw_hw         = data.table::fifelse(Broadleaf, "hw", "sw"),
-        genus         = sapply(strsplit(NFI, "_"), `[[`, 1)
-      )]
-
-    sim$userGcMeta <- cbind(
-      sim$userGcMeta[, .SD, .SDcols = setdiff(names(sim$userGcMeta), names(sppMatchTable))],
-      sppMatchTable)
-    rm(sppMatchTable)
-  }
-
-
-  # END Reading in user provided meta data for growth curves -----------------------------------------------
-
-  # START processing curves from m3/ha to tonnes of C/ha then to annual increments
-  # per above ground biomass pools -------------------------------------------
+  # Process curves from m3/ha to tonnes of C/ha then to annual increments
+  # per above ground biomass pools
 
   # Create a new unique key defining each growth curve and spatial_unit_id
   sim$userGcSPU <- cbind(
@@ -311,42 +313,6 @@ Init <- function(sim) {
   message(crayon::red("User: please inspect figures of the raw and smoothed translation of your growth curves in: ",
                     figPath))
 
-  # 3.1 SK-specific fixes with birch curves:
-  ## SK is a great example of poor performance of the Boudewyn et al 2007
-  ## models. The "translation" does not work well with white birch (probably
-  ## because there was not enough data in SK in the model-building data). So,
-  ## the resulting curves are for fol and other are nonsensical. This can be
-  ## seen by visually inspecting the curves going into the translations (run
-  ## m3ToBiomPlots commented above). Here, the user, decided that after all the
-  ## catches in place in the cSmoothPools failed, a hard fix was needed. The
-  ## fol and other columns in gcids 37 and 58, will be replace by the fol and
-  ## other of gcids 55.
-  ## The user will have to decide which curves to replace and with what in their own study areas.
-  if (any(cPoolsRaw$gcids == "27_37")) {
-    cPoolsRaw[gcids == "27_37", fol   := cPoolsRaw[gcids == "28_55", fol]]
-    cPoolsRaw[gcids == "27_37", other := cPoolsRaw[gcids == "28_55", other]]
-  }
-  if (any(cPoolsRaw$gcids == "28_58")) {
-    cPoolsRaw[gcids == "28_58", fol   := cPoolsRaw[gcids == "28_55", fol]]
-    cPoolsRaw[gcids == "28_58", other := cPoolsRaw[gcids == "28_55", other]]
-  }
-  if (any(cPoolsRaw$gcids == "27_58")) {
-    cPoolsRaw[gcids == "27_58", fol   := cPoolsRaw[gcids == "28_55", fol]]
-    cPoolsRaw[gcids == "27_58", other := cPoolsRaw[gcids == "28_55", other]]
-  }
-  if (any(cPoolsRaw$gcids == "27_38")) {
-    cPoolsRaw[gcids == "27_38", fol   := cPoolsRaw[gcids == "28_55", fol]]
-    cPoolsRaw[gcids == "27_38", other := cPoolsRaw[gcids == "28_55", other]]
-  }
-  if (any(cPoolsRaw$gcids == "27_39")) {
-    cPoolsRaw[gcids == "27_39", fol   := cPoolsRaw[gcids == "28_55", fol]]
-    cPoolsRaw[gcids == "27_39", other := cPoolsRaw[gcids == "28_55", other]]
-  }
-  if (any(cPoolsRaw$gcids == "28_60")) {
-    cPoolsRaw[gcids == "28_60", fol   := cPoolsRaw[gcids == "28_55", fol]]
-    cPoolsRaw[gcids == "28_60", other := cPoolsRaw[gcids == "28_55", other]]
-  }
-
   # Smooth curves
   cPoolsClean <- cumPoolsSmooth(cPoolsRaw
                                   ) |> Cache()
@@ -370,6 +336,8 @@ Init <- function(sim) {
 
   # 4. Calculating Increments
   incCols <- c("incMerch", "incFol", "incOther")
+  cPoolsClean <- copy(cPoolsClean) #TEMP FIX: making a copy of this table deals with the shallow table warning that happens in the line below.
+  ## This warning likely originates from how the table is dealt with in cumPoolsSmooth or cumPoolsCreate.
   cPoolsClean[, (incCols) := lapply(.SD, function(x) c(NA, diff(x))), .SDcols = colNames,
                 by = eval("gcids")]
   colsToUse33 <- c("age", "gcids", incCols)
@@ -432,51 +400,6 @@ Init <- function(sim) {
 }
 
 .inputObjects <- function(sim) {
-
-  # Growth and yield
-  if (!suppliedElsewhere("curveID", sim)) {
-    sim$curveID <- "curveID"
-  }
-
-  if (!suppliedElsewhere("userGcMeta", sim)) {
-    if (!suppliedElsewhere("userGcMetaURL", sim)) {
-      sim$userGcMetaURL <- extractURL("userGcMeta")
-    }
-
-    sim$userGcMeta <- prepInputs(url = sim$userGcMetaURL,
-                                 targetFile = "gcMetaEg.csv",
-                                 destinationPath = inputPath(sim),
-                                 fun = fread,
-                                 purge = 7
-    )
-    data.table::setnames(sim$userGcMeta, "gcids", "curveID")
-    data.table::setkey(sim$userGcMeta, curveID)
-
-    sim$userGcMeta[, sw_hw := data.table::fifelse(forest_type_id == 1, "sw", "hw")]
-  }
-
-  if (!suppliedElsewhere("userGcM3", sim)){
-
-    if (suppliedElsewhere("userGcM3URL", sim)){
-
-      sim$userGcM3 <- prepInputs(url = sim$userGcM3URL,
-                                 destinationPath = inputPath(sim),
-                                 fun = "data.table::fread")
-
-    }else{
-
-      message("User has not supplied growth curves ('userGcM3' or 'userGcM3URL'). ",
-              "Defaults for Saskatchewan will be used.")
-
-      sim$userGcM3 <- prepInputs(url = extractURL("userGcM3"),
-                                 destinationPath = inputPath(sim),
-                                 targetFile = "userGcM3.csv",
-                                 fun = "data.table::fread")
-      data.table::setnames(sim$userGcM3, names(sim$userGcM3), c("curveID", "Age", "MerchVolume"))
-      data.table::setkeyv(sim$userGcM3, c("curveID", "Age"))
-
-    }
-  }
 
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
   # abbreviation and cbm spatial units and ecoBoudnary id is provided with the

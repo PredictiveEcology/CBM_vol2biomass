@@ -1,16 +1,16 @@
 
 if (!testthat::is_testing()) source(testthat::test_path("setup.R"))
 
-test_that("Module runs with defaults", {
+test_that("Module: SK curves: V1", {
 
   ## Run simInit and spades ----
 
   # Set up project
-  projectName <- "1-defaults"
+  projectName <- "1-SK-V1"
 
   simInitInput <- SpaDES.project::setupProject(
 
-    modules = "CBM_vol2biomass_SK",
+    modules = "CBM_vol2biomass",
     paths   = list(
       projectPath = spadesTestPaths$projectPath,
       modulePath  = spadesTestPaths$modulePath,
@@ -19,10 +19,16 @@ test_that("Module runs with defaults", {
       cachePath   = spadesTestPaths$cachePath,
       outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
     ),
+    params = list(CBM_vol2biomass = list(.useCache = FALSE)),
 
+    cbmAdmin   = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
+    userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v1", "userGcMeta.csv")),
+    userGcM3   = read.csv(file.path(spadesTestPaths$testdata, "SK_v1", "userGcM3.csv")),
+
+    curveID   = "curveID",
     userGcSPU = data.frame(
       spatial_unit_id = 28,
-      curveID         = 22
+      curveID         = 55
     )
   )
 
@@ -48,7 +54,7 @@ test_that("Module runs with defaults", {
   expect_true(!is.null(simTest$cPoolsClean))
   expect_true(inherits(simTest$cPoolsClean, "data.table"))
 
-  expect_true("28_22" %in% simTest$cPoolsClean$gcids)
+  expect_true("28_55" %in% simTest$cPoolsClean$gcids)
 
 
   ## Check output 'gcMeta' ---
@@ -56,7 +62,7 @@ test_that("Module runs with defaults", {
   expect_true(!is.null(simTest$gcMeta))
   expect_true(inherits(simTest$gcMeta, "data.table"))
 
-  expect_true("28_22" %in% simTest$gcMeta$gcids)
+  expect_true("28_55" %in% simTest$gcMeta$gcids)
 
 
   ## Check output 'growth_increments' ----
@@ -64,7 +70,7 @@ test_that("Module runs with defaults", {
   expect_true(!is.null(simTest$growth_increments))
   expect_true(inherits(simTest$growth_increments, "data.table"))
 
-  expect_true("28_22" %in% simTest$growth_increments$gcids)
+  expect_true("28_55" %in% simTest$growth_increments$gcids)
 
 })
 
