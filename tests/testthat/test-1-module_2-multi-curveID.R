@@ -10,7 +10,7 @@ test_that("Module runs with multiple curveID", {
 
   simInitInput <- SpaDES.project::setupProject(
 
-    modules = "CBM_vol2biomass_SK",
+    modules = "CBM_vol2biomass",
     paths   = list(
       projectPath = spadesTestPaths$projectPath,
       modulePath  = spadesTestPaths$modulePath,
