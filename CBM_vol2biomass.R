@@ -110,9 +110,6 @@ defineModule(sim, list(
   ),
   outputObjects = bindrows(
     createsOutput(
-      objectName = "volCurves", objectClass = "plot",
-      desc = "Plot of all the growth curve provided by the user"),
-    createsOutput(
       objectName = "gcMeta", objectClass = "data.table",
       desc = "Growth curve metadata with key 'gcids'"),
     createsOutput(
@@ -224,14 +221,14 @@ Vol2Biomass <- function(sim){
 
   # Creates/sets the vol2biomass outputs subfolder (inside the general outputs folder)
   figPath <- file.path(outputPath(sim), "CBM_vol2biomass_figures")
-  sim$volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = "curveID", colour = factor("curveID"))) +
+  volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = "curveID", colour = factor("curveID"))) +
     geom_line() + theme_bw()
-  SpaDES.core::Plots(sim$volCurves,
+  SpaDES.core::Plots(volCurves,
                      filename = "volCurves",
                      path = figPath,
                      ggsaveArgs = list(width = 7, height = 5, units = "in", dpi = 300),
                      types = "png")
-  message("User: please look at the curve you provided via sim$volCurves or the volCurves.png file in the outputs folder")
+  message("User: please review curve plots created in outputs directory: ", figPath)
 
 
   # START reducing Biomass model parameter tables --------------------------------------------
