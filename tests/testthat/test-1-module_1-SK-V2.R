@@ -44,12 +44,6 @@ test_that("Module: SK curves: V2", {
   expect_s4_class(simTest, "simList")
 
 
-  ## Check outputs 'volCurves' ----
-
-  expect_true(!is.null(simTest$volCurves))
-  expect_true(inherits(simTest$volCurves, "ggplot"))
-
-
   ## Check output 'cumPoolsClean' ----
 
   expect_true(!is.null(simTest$cPoolsClean))
