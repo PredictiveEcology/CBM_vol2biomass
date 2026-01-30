@@ -350,45 +350,30 @@ Vol2Biomass <- function(sim){
 
   sim$cPoolsClean <- cPoolsClean
 
-  # 4. add sw/hw flag
-  colsToUseForestType <- c("sw_hw", "gcids")
-  forestType <- unique(sim$gcMeta[, ..colsToUseForestType])
-
-  #       # cbmTables$forest_type
-  #       # id           name
-  #       # 1  1       Softwood
-  #       # 2  2      Mixedwood
-  #       # 3  3       Hardwood
-  #       # 4  9 Not Applicable
-
-  setkeyv(forestType, "gcids")
-  cPoolsClean <- merge(cPoolsClean, forestType, by = "gcids",
-                                     all.x = TRUE, all.y = FALSE)
-
-  # 5. finalize sim$growth_increments table
-  outCols <- c("id", "ecozone", "totMerch", "fol", "other")
-  cPoolsClean[, (outCols) := NULL]
-  keepCols <- c("gcids", "age", "merch_inc", "foliage_inc", "other_inc", "sw_hw")
-  incCols <- c("merch_inc", "foliage_inc", "other_inc")
-  setnames(cPoolsClean,names(cPoolsClean),
-           keepCols)
-  increments <- cPoolsClean[, (incCols) := list(
-    merch_inc, foliage_inc, other_inc
+  # 4. finalize sim$growth_increments table
+  increments <- cPoolsClean[, .(
+    gcids, age,
+    merch_inc   = totMerch,
+    foliage_inc = fol,
+    other_inc   = other
   )]
-  setorderv(increments, c("gcids", "age"))
+  setorder(increments, gcids, age)
+
+  ## replace increments that are NA with 0s
+  increments[is.na(merch_inc),   merch_inc   := 0]
+  increments[is.na(foliage_inc), foliage_inc := 0]
+  increments[is.na(other_inc),   other_inc   := 0]
+
+  sim$growth_increments <- increments
 
   # Assertions
   if (isTRUE(P(sim)$doAssertions)) {
     # All should have same min age
-    if (length(unique(increments[, min(age), by = "sw_hw"]$V1)) != 1)
+    if (length(unique(increments[, min(age), by = "gcids"]$V1)) != 1)
       stop("All ages should start at the same age for each curveID")
-    if (length(unique(increments[, max(age), by = "sw_hw"]$V1)) != 1)
+    if (length(unique(increments[, max(age), by = "gcids"]$V1)) != 1)
       stop("All ages should end at the same age for each curveID")
   }
-
-  ## replace increments that are NA with 0s
-  increments[is.na(increments), ] <- 0
-  sim$growth_increments <- increments
 
   # END process growth curves -------------------------------------------------------------------------------
   # ! ----- STOP EDITING ----- ! #
