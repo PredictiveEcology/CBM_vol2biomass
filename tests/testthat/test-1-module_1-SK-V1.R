@@ -59,12 +59,12 @@ test_that("Module: SK curves: V1", {
   expect_true("28_55" %in% simTest$gcMeta$gcids)
 
 
-  ## Check output 'growth_increments' ----
+  ## Check output 'gcIncrements' ----
 
-  expect_true(!is.null(simTest$growth_increments))
-  expect_true(inherits(simTest$growth_increments, "data.table"))
+  expect_true(!is.null(simTest$gcIncrements))
+  expect_true(inherits(simTest$gcIncrements, "data.table"))
 
-  expect_true("28_55" %in% simTest$growth_increments$gcids)
+  expect_true("28_55" %in% simTest$gcIncrements$gcids)
 
 })
 
