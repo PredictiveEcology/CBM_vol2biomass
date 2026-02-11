@@ -64,10 +64,10 @@ test_that("Module: SK curves: V2", {
   expect_true("28_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
 
 
-  ## Check output 'growth_increments' ----
+  ## Check output 'gcIncrements' ----
 
-  expect_true(!is.null(simTest$growth_increments))
-  expect_true(inherits(simTest$growth_increments, "data.table"))
+  expect_true(!is.null(simTest$gcIncrements))
+  expect_true(inherits(simTest$gcIncrements, "data.table"))
 
   expect_true("27_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
   expect_true("28_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)

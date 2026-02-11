@@ -111,15 +111,15 @@ defineModule(sim, list(
   outputObjects = bindrows(
     createsOutput(
       objectName = "gcMeta", objectClass = "data.table",
-      desc = "Growth curve metadata with key 'gcids'"),
+      desc = "Growth curve metadata"),
+    createsOutput(
+      objectName = "gcIncrements", objectClass = "data.table",
+      desc = "Growth curve carbon increments in MgC/ha/year"),
     createsOutput(
       objectName = "cPoolsClean", objectClass = "data.table",
       desc = "Tonnes of carbon/ha both cumulative and increments,
       for each growth curve id (in this data.table id and gcids are
-      the same), by age and ecozone"),
-    createsOutput(
-      objectName = "growth_increments", objectClass = "data.table",
-      desc = "Carbon increment matrix by age for each gcids")
+      the same), by age and ecozone")
   )
 ))
 
@@ -350,7 +350,7 @@ Vol2Biomass <- function(sim){
 
   sim$cPoolsClean <- cPoolsClean
 
-  # 4. finalize sim$growth_increments table
+  # 4. finalize increments table
   increments <- cPoolsClean[, .(
     gcids, age,
     merch_inc   = totMerch,
@@ -364,7 +364,7 @@ Vol2Biomass <- function(sim){
   increments[is.na(foliage_inc), foliage_inc := 0]
   increments[is.na(other_inc),   other_inc   := 0]
 
-  sim$growth_increments <- increments
+  sim$gcIncrements <- increments
 
   # Assertions
   if (isTRUE(P(sim)$doAssertions)) {
