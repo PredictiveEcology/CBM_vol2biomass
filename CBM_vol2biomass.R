@@ -357,7 +357,7 @@ Vol2Biomass <- function(sim){
     foliage_inc = fol,
     other_inc   = other
   )]
-  setorder(increments, gcids, age)
+  data.table::setkey(increments, gcids, age)
 
   ## replace increments that are NA with 0s
   increments[is.na(merch_inc),   merch_inc   := 0]

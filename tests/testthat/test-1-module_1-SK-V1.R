@@ -21,15 +21,15 @@ test_that("Module: SK curves: V1", {
     ),
     params = list(CBM_vol2biomass = list(.useCache = FALSE)),
 
-    cbmAdmin   = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
-    userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v1", "userGcMeta.csv")),
-    userGcM3   = read.csv(file.path(spadesTestPaths$testdata, "SK_v1", "userGcM3.csv")),
+    cbmAdmin = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
 
     curveID   = "curveID",
     userGcSPU = data.frame(
       spatial_unit_id = 28,
       curveID         = 55
-    )
+    ),
+    userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v1", "userGcMeta.csv")),
+    userGcM3   = read.csv(file.path(spadesTestPaths$testdata, "SK_v1", "userGcM3.csv"))
   )
 
   # Run simInit
@@ -43,19 +43,14 @@ test_that("Module: SK curves: V1", {
   expect_s4_class(simTest, "simList")
 
 
-  ## Check output 'cumPoolsClean' ----
-
-  expect_true(!is.null(simTest$cPoolsClean))
-  expect_true(inherits(simTest$cPoolsClean, "data.table"))
-
-  expect_true("28_55" %in% simTest$cPoolsClean$gcids)
-
-
   ## Check output 'gcMeta' ---
 
   expect_true(!is.null(simTest$gcMeta))
   expect_true(inherits(simTest$gcMeta, "data.table"))
 
+  expect_identical(data.table::key(simTest$gcMeta), "gcids")
+
+  expect_equal(nrow(simTest$gcMeta), 1)
   expect_true("28_55" %in% simTest$gcMeta$gcids)
 
 
@@ -64,7 +59,20 @@ test_that("Module: SK curves: V1", {
   expect_true(!is.null(simTest$gcIncrements))
   expect_true(inherits(simTest$gcIncrements, "data.table"))
 
+  expect_identical(names(simTest$gcIncrements), c("gcids", "age", "merch_inc", "foliage_inc", "other_inc"))
+  expect_identical(data.table::key(simTest$gcIncrements), c("gcids", "age"))
+
+  expect_equal(nrow(simTest$gcIncrements), 1 * 251)
   expect_true("28_55" %in% simTest$gcIncrements$gcids)
+
+
+  ## Check output 'cumPoolsClean' ----
+
+  expect_true(!is.null(simTest$cPoolsClean))
+  expect_true(inherits(simTest$cPoolsClean, "data.table"))
+
+  expect_equal(nrow(simTest$cPoolsClean), 1 * 251)
+  expect_true("28_55" %in% simTest$cPoolsClean$gcids)
 
 })
 
