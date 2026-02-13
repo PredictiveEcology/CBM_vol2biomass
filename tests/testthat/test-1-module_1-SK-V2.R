@@ -21,16 +21,16 @@ test_that("Module: SK curves: V2", {
     ),
     params = list(CBM_vol2biomass = list(.useCache = FALSE)),
 
-    cbmAdmin   = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
-    userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcMeta.csv")),
-    userGcM3   = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcM3.csv")),
+    cbmAdmin = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
 
     curveID   = c("species", "prodClass"),
     userGcSPU = rbind(
       data.frame(spatial_unit_id = 27, species = "Trembling aspen", prodClass = "M"),
       data.frame(spatial_unit_id = 28, species = "Trembling aspen", prodClass = "P"),
       data.frame(spatial_unit_id = 28, species = "Jack pine",       prodClass = "P")
-    )
+    ),
+    userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcMeta.csv")),
+    userGcM3   = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcM3.csv"))
   )
 
   # Run simInit
@@ -44,21 +44,14 @@ test_that("Module: SK curves: V2", {
   expect_s4_class(simTest, "simList")
 
 
-  ## Check output 'cumPoolsClean' ----
-
-  expect_true(!is.null(simTest$cPoolsClean))
-  expect_true(inherits(simTest$cPoolsClean, "data.table"))
-
-  expect_true("27_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
-  expect_true("28_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
-  expect_true("28_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
-
-
   ## Check output 'gcMeta' ---
 
   expect_true(!is.null(simTest$gcMeta))
   expect_true(inherits(simTest$gcMeta, "data.table"))
 
+  expect_identical(data.table::key(simTest$gcMeta), "gcids")
+
+  expect_equal(nrow(simTest$gcMeta), 3)
   expect_true("27_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
   expect_true("28_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
   expect_true("28_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
@@ -69,6 +62,21 @@ test_that("Module: SK curves: V2", {
   expect_true(!is.null(simTest$gcIncrements))
   expect_true(inherits(simTest$gcIncrements, "data.table"))
 
+  expect_identical(names(simTest$gcIncrements), c("gcids", "age", "merch_inc", "foliage_inc", "other_inc"))
+  expect_identical(data.table::key(simTest$gcIncrements), c("gcids", "age"))
+
+  expect_equal(nrow(simTest$gcIncrements), 3 * 251)
+  expect_true("27_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
+  expect_true("28_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
+  expect_true("28_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
+
+
+  ## Check output 'cumPoolsClean' ----
+
+  expect_true(!is.null(simTest$cPoolsClean))
+  expect_true(inherits(simTest$cPoolsClean, "data.table"))
+
+  expect_equal(nrow(simTest$cPoolsClean), 3 * 251)
   expect_true("27_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
   expect_true("28_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
   expect_true("28_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
