@@ -18,7 +18,7 @@ defineModule(sim, list(
   citation = list("citation.bib"),
   documentation = deparse(list("README.txt", "CBM_vol2biomass.Rmd")),
   reqdPkgs = list(
-    "PredictiveEcology/CBMutils@development (>=2.4.2.9000)",
+    "PredictiveEcology/CBMutils@development (>=2.5.2)",
     "ggforce", "ggplot2", "ggpubr", "mgcv", "quickPlot", "robustbase", "data.table", "patchwork"
   ),
   parameters = rbind(
@@ -172,7 +172,6 @@ ReadInputs <- function(sim) {
     }
   }
 
-  sim$cbmAdmin   <- data.table::as.data.table(sim$cbmAdmin)
   sim$userGcSPU  <- data.table::as.data.table(sim$userGcSPU)
   sim$userGcMeta <- data.table::as.data.table(sim$userGcMeta)
   sim$userGcM3   <- data.table::as.data.table(sim$userGcM3)
@@ -233,9 +232,6 @@ Vol2Biomass <- function(sim){
 
   # START reducing Biomass model parameter tables --------------------------------------------
 
-  thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% na.omit(sim$userGcSPU$spatial_unit_id), ]
-
-
   ## TEMPORARY: Current Boudewyn tables label Yukon as YT instead of YK. This hard coded fix ensures they are properly labeled as YK
   sim$table3$juris_id[sim$table3$juris_id == "YT"] <- "YK"
   sim$table4$juris_id[sim$table4$juris_id == "YT"] <- "YK"
@@ -245,11 +241,19 @@ Vol2Biomass <- function(sim){
   # subsetting Boudewyn tables to the ecozones/admin boundaries of the study area.
   # Some ecozones/boundaries are not in these tables, in these cases, the function replaces them in
   # thisAdmin to the closest equivalent present in the Boudewyn tables.
-  stable3 <- boudewynSubsetTables(sim$table3, thisAdmin, thisAdmin$EcoBoundaryID)
-  stable4 <- boudewynSubsetTables(sim$table4, thisAdmin, thisAdmin$EcoBoundaryID)
-  stable5 <- boudewynSubsetTables(sim$table5, thisAdmin, thisAdmin$EcoBoundaryID)
-  stable6 <- boudewynSubsetTables(sim$table6, thisAdmin, thisAdmin$EcoBoundaryID)
-  stable7 <- boudewynSubsetTables(sim$table7, thisAdmin, thisAdmin$EcoBoundaryID)
+  thisAdmin <- sim$userGcSPU
+  if (!"juris_id" %in% names(thisAdmin)){
+    thisAdmin[, juris_id := sim$cbmAdmin$abreviation[match(spatial_unit_id, sim$cbmAdmin$SpatialUnitID)]]
+  }
+  if (!"ecozone" %in% names(thisAdmin)){
+    thisAdmin[, ecozone  := sim$cbmAdmin$EcoBoundaryID[match(spatial_unit_id, sim$cbmAdmin$SpatialUnitID)]]
+  }
+
+  stable3 <- boudewynSubsetTables(sim$table3, thisAdmin)
+  stable4 <- boudewynSubsetTables(sim$table4, thisAdmin)
+  stable5 <- boudewynSubsetTables(sim$table5, thisAdmin)
+  stable6 <- boudewynSubsetTables(sim$table6, thisAdmin)
+  stable7 <- boudewynSubsetTables(sim$table7, thisAdmin)
 
 
   # START processing curves -------------------------------------------
@@ -270,10 +274,7 @@ Vol2Biomass <- function(sim){
   data.table::setkey(sim$gcMeta, gcids)
 
   if (!"ecozones" %in% names(sim$gcMeta)){
-    sim$gcMeta <- merge(
-      sim$gcMeta,
-      sim$cbmAdmin[, .(spatial_unit_id = SpatialUnitID, ecozones = EcoBoundaryID)],
-      by = "spatial_unit_id")
+    sim$gcMeta[, ecozones := sim$cbmAdmin$EcoBoundaryID[match(spatial_unit_id, sim$cbmAdmin$SpatialUnitID)]]
   }
 
   gcM3 <- merge(sim$gcMeta, sim$userGcM3, by = "curveID", allow.cartesian = TRUE)[
@@ -285,7 +286,9 @@ Vol2Biomass <- function(sim){
   # Matching is 1st on species, then on gcids which gives us location (admin,
   # spatial unit and ecozone)
   fullSpecies <- unique(sim$gcMeta$species)
-
+  thisAdmin <- data.table::as.data.table(
+    sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% na.omit(sim$userGcSPU$spatial_unit_id),]
+  )
   cPools <- cumPoolsCreate(fullSpecies, sim$gcMeta, gcM3,
                              stable3, stable4, stable5, stable6, stable7, thisAdmin
                              ) |> Cache()
