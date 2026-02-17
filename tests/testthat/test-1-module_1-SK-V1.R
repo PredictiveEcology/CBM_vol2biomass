@@ -23,11 +23,7 @@ test_that("Module: SK curves: V1", {
 
     cbmAdmin = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
 
-    curveID   = "curveID",
-    userGcSPU = data.frame(
-      spatial_unit_id = 28,
-      curveID         = 55
-    ),
+    userGcLocations = data.frame(admin_abbrev = "SK", eco_id = 9, curveID = 55),
     userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v1", "userGcMeta.csv")),
     userGcM3   = read.csv(file.path(spadesTestPaths$testdata, "SK_v1", "userGcM3.csv"))
   )
@@ -51,19 +47,28 @@ test_that("Module: SK curves: V1", {
   expect_identical(data.table::key(simTest$gcMeta), "gcids")
 
   expect_equal(nrow(simTest$gcMeta), 1)
-  expect_true("28_55" %in% simTest$gcMeta$gcids)
+  expect_true("SK_9_55" %in% simTest$gcMeta$gcids)
 
 
   ## Check output 'gcIncrements' ----
 
   expect_true(!is.null(simTest$gcIncrements))
   expect_true(inherits(simTest$gcIncrements, "data.table"))
+  expect_identical(data.table::key(simTest$gcIncrements), c("gcids", "age"))
 
   expect_identical(names(simTest$gcIncrements), c("gcids", "age", "merch_inc", "foliage_inc", "other_inc"))
   expect_identical(data.table::key(simTest$gcIncrements), c("gcids", "age"))
 
   expect_equal(nrow(simTest$gcIncrements), 1 * 251)
-  expect_true("28_55" %in% simTest$gcIncrements$gcids)
+  expect_true("SK_9_55" %in% simTest$gcIncrements$gcids)
+
+
+  ## Check output 'cumPoolsClean' ----
+
+  expect_true(!is.null(simTest$cPoolsClean))
+  expect_true(inherits(simTest$cPoolsClean, "data.table"))
+
+  expect_true("SK_9_55" %in% simTest$cPoolsClean$gcids)
 
 
   ## Check output 'cumPoolsClean' ----
@@ -72,7 +77,7 @@ test_that("Module: SK curves: V1", {
   expect_true(inherits(simTest$cPoolsClean, "data.table"))
 
   expect_equal(nrow(simTest$cPoolsClean), 1 * 251)
-  expect_true("28_55" %in% simTest$cPoolsClean$gcids)
+  expect_true("SK_9_55" %in% simTest$cPoolsClean$gcids)
 
 })
 

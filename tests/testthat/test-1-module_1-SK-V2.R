@@ -23,11 +23,10 @@ test_that("Module: SK curves: V2", {
 
     cbmAdmin = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
 
-    curveID   = c("species", "prodClass"),
-    userGcSPU = rbind(
-      data.frame(spatial_unit_id = 27, species = "Trembling aspen", prodClass = "M"),
-      data.frame(spatial_unit_id = 28, species = "Trembling aspen", prodClass = "P"),
-      data.frame(spatial_unit_id = 28, species = "Jack pine",       prodClass = "P")
+    userGcLocations = rbind(
+      data.frame(admin_abbrev = "SK", eco_id = 6, species = "Trembling aspen", prodClass = "M"),
+      data.frame(admin_abbrev = "SK", eco_id = 9, species = "Trembling aspen", prodClass = "P"),
+      data.frame(admin_abbrev = "SK", eco_id = 9, species = "Jack pine",       prodClass = "P")
     ),
     userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcMeta.csv")),
     userGcM3   = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcM3.csv"))
@@ -52,9 +51,9 @@ test_that("Module: SK curves: V2", {
   expect_identical(data.table::key(simTest$gcMeta), "gcids")
 
   expect_equal(nrow(simTest$gcMeta), 3)
-  expect_true("27_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
-  expect_true("28_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
-  expect_true("28_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
+  expect_true("SK_6_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
+  expect_true("SK_9_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
+  expect_true("SK_9_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
 
 
   ## Check output 'gcIncrements' ----
@@ -66,9 +65,9 @@ test_that("Module: SK curves: V2", {
   expect_identical(data.table::key(simTest$gcIncrements), c("gcids", "age"))
 
   expect_equal(nrow(simTest$gcIncrements), 3 * 251)
-  expect_true("27_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
-  expect_true("28_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
-  expect_true("28_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
+  expect_true("SK_6_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
+  expect_true("SK_9_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
+  expect_true("SK_9_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
 
 
   ## Check output 'cumPoolsClean' ----
@@ -77,9 +76,9 @@ test_that("Module: SK curves: V2", {
   expect_true(inherits(simTest$cPoolsClean, "data.table"))
 
   expect_equal(nrow(simTest$cPoolsClean), 3 * 251)
-  expect_true("27_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
-  expect_true("28_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
-  expect_true("28_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
+  expect_true("SK_6_Trembling aspen_M" %in% simTest$cPoolsClean$gcids)
+  expect_true("SK_9_Trembling aspen_P" %in% simTest$cPoolsClean$gcids)
+  expect_true("SK_9_Jack pine_P"       %in% simTest$cPoolsClean$gcids)
 
 })
 
