@@ -170,15 +170,16 @@ ReadInputs <- function(sim) {
   }
 
   # Initiate gcMeta
-  curveID <- setdiff(names(sim$userGcLocations), c("admin_abbrev", "eco_id"))
+  adminID <- c("admin_abbrev", "eco_id")
+  curveID <- setdiff(names(sim$userGcLocations), c("admin_name", adminID))
   if (length(curveID) == 0) stop("userGcLocations requires one or more userGcMeta columns")
 
   sim$gcMeta <- unique(sim$userGcLocations)
-  sim$gcMeta[, gcids := factor(CBMutils::gcidsCreate(sim$gcMeta))]
+  sim$gcMeta$gcids <- factor(CBMutils::gcidsCreate(sim$gcMeta[, .SD, .SDcols = c(adminID, curveID)]))
 
   sim$gcMeta <- merge(sim$gcMeta, sim$userGcMeta, by = curveID, all.x = TRUE)
   data.table::setkey(sim$gcMeta, gcids)
-  data.table::setcolorder(sim$gcMeta)
+  data.table::setcolorder(sim$gcMeta, c("gcids", "admin_name", adminID, curveID), skip_absent = TRUE)
 
   if (any(is.na(sim$gcMeta$curveID))){
     gcMissing <- sim$gcMeta[is.na(curveID), .SD, .SDcols = names(sim$userGcLocations)]
