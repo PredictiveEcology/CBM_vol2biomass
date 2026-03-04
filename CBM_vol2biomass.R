@@ -255,7 +255,7 @@ Vol2Biomass <- function(sim){
   # subsetting Boudewyn tables to the ecozones/admin boundaries of the study area.
   # Some ecozones/boundaries are not in these tables, in these cases, the function replaces them in
   # thisAdmin to the closest equivalent present in the Boudewyn tables.
-  thisAdmin <- sim$gcMeta[, .(juris_id = admin_abbrev, ecozone = eco_id)]
+  thisAdmin <- unique(sim$gcMeta[, .(juris_id = admin_abbrev, ecozone = eco_id)])
   stable3 <- boudewynSubsetTables(sim$table3, thisAdmin)
   stable4 <- boudewynSubsetTables(sim$table4, thisAdmin)
   stable5 <- boudewynSubsetTables(sim$table5, thisAdmin)
