@@ -68,14 +68,6 @@ test_that("Module: SK curves: V1", {
   expect_true(!is.null(simTest$cPoolsClean))
   expect_true(inherits(simTest$cPoolsClean, "data.table"))
 
-  expect_true("SK_9_55" %in% simTest$cPoolsClean$gcids)
-
-
-  ## Check output 'cumPoolsClean' ----
-
-  expect_true(!is.null(simTest$cPoolsClean))
-  expect_true(inherits(simTest$cPoolsClean, "data.table"))
-
   expect_equal(nrow(simTest$cPoolsClean), 1 * 251)
   expect_true("SK_9_55" %in% simTest$cPoolsClean$gcids)
 
