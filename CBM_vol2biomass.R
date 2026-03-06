@@ -22,35 +22,9 @@ defineModule(sim, list(
     "ggforce", "ggplot2", "ggpubr", "mgcv", "quickPlot", "robustbase", "data.table", "patchwork"
   ),
   parameters = rbind(
-    defineParameter(
-      "outputFigurePath", "character", NA, NA, NA,
-      paste("Filepath to a directory where output figures will be saved.",
-            "The default is a directory named 'CBM_vol2biomass_figures' within the simulation outputs directory.")
-    ),
-    defineParameter(
-      ".plotInitialTime", "numeric", NA, NA, NA,
-      "Describes the simulation time at which the first plot event should occur."
-    ),
-    defineParameter(
-      ".plotInterval", "numeric", NA, NA, NA,
-      "Describes the simulation time interval between plot events."
-    ),
-    defineParameter(
-      ".saveInitialTime", "numeric", NA, NA, NA,
-      "Describes the simulation time at which the first save event should occur."
-    ),
-    defineParameter(
-      ".saveInterval", "numeric", NA, NA, NA,
-      "This describes the simulation time interval between save events."
-    ),
-    defineParameter(
-      ".useCache", "logical", TRUE, NA, NA,
-      paste(
-        "Should this entire module be run with caching activated?",
-        "This is generally intended for data-type modules, where stochasticity",
-        "and time are not relevant"
-      )
-    )
+    defineParameter(".plotPath", "character", NA, NA, NA, "Path to directory for output figures"),
+    defineParameter(".plot",     "logical", TRUE, NA, NA, "Plot input and translated curves"),
+    defineParameter(".useCache", "logical", TRUE, NA, NA, "Cache module events")
   ),
   inputObjects = bindrows(
     expectsInput(
@@ -233,15 +207,19 @@ Vol2Biomass <- function(sim){
   }
 
   # Creates/sets the vol2biomass outputs subfolder (inside the general outputs folder)
-  figPath <- file.path(outputPath(sim), "CBM_vol2biomass_figures")
-  volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = curveID, colour = factor(curveID))) +
-    geom_line() + labs(colour = "curveID") + theme_bw()
-  SpaDES.core::Plots(volCurves,
-                     filename = "volCurves",
-                     path = figPath,
-                     ggsaveArgs = list(width = 7, height = 5, units = "in", dpi = 300),
-                     types = "png")
-  message("User: please review curve plots created in outputs directory: ", figPath)
+  if (P(sim)$.plot){
+
+    volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = curveID, colour = factor(curveID))) +
+      geom_line() + labs(colour = "curveID") + theme_bw()
+
+    SpaDES.core::Plots(volCurves,
+                       filename = "volCurves",
+                       path = P(sim)$.plotPath,
+                       ggsaveArgs = list(width = 7, height = 5, units = "in", dpi = 300),
+                       types = "png")
+
+    message("User: please review plots of input curves: ", P(sim)$.plotPath)
+  }
 
 
   # START reducing Biomass model parameter tables --------------------------------------------
@@ -315,22 +293,25 @@ Vol2Biomass <- function(sim){
   setorderv(cPoolsRaw, c("gcids", "age"))
 
   # 3. Fixing of non-smooth curves
-  message(crayon::red("User: please inspect figures of the raw and smoothed translation of your growth curves in: ",
-                    figPath))
-
-  # Smooth curves
-  cPoolsClean <- cumPoolsSmooth(cPoolsRaw
-                                  ) |> Cache()
+  cPoolsClean <- cumPoolsSmooth(cPoolsRaw) |> Cache()
 
   #Note: this will produce a warning if one of the curve smoothing efforts doesn't converge
-  cPoolsSmoothPlot <- m3ToBiomPlots(inc = cPoolsClean,
-                                    title = "Cumulative merch/fol/other by gcid")
-  for (i in seq_along(cPoolsSmoothPlot)){
-  SpaDES.core::Plots(cPoolsSmoothPlot[[i]],
-                     filename = paste0("cPools_smoothed_postChapmanRichards_", i, ".png"),
-                     path = figPath,
-                     ggsaveArgs = list(width = 10, height = 5, units = "in", dpi = 300),
-                     types = "png")
+  if (P(sim)$.plot){
+
+    cPoolsSmoothPlot <- m3ToBiomPlots(inc = cPoolsClean,
+                                      title = "Cumulative merch/fol/other by gcid")
+
+    for (i in seq_along(cPoolsSmoothPlot)){
+      SpaDES.core::Plots(cPoolsSmoothPlot[[i]],
+                         filename = paste0("cPools_smoothed_postChapmanRichards_", i, ".png"),
+                         path = P(sim)$.plotPath,
+                         ggsaveArgs = list(width = 10, height = 5, units = "in", dpi = 300),
+                         types = "png")
+    }
+
+    message(crayon::red(
+      "User: please review plots of raw and smoothed translations of growth curves: ",
+      P(sim)$.plotPath))
   }
 
   ## keeping the new curves - at this point they are still cumulative
@@ -345,18 +326,24 @@ Vol2Biomass <- function(sim){
   ## This warning likely originates from how the table is dealt with in cumPoolsSmooth or cumPoolsCreate.
   cPoolsClean[, (incCols) := lapply(.SD, function(x) c(NA, diff(x))), .SDcols = colNames,
                 by = eval("gcids")]
-  colsToUse33 <- c("age", "gcids", incCols)
-  rawIncPlots <- m3ToBiomPlots(inc = cPoolsClean[, ..colsToUse33],
-                               title = "Increments")
-  for (i in seq_along(rawIncPlots)){
-  SpaDES.core::Plots(rawIncPlots[[i]],
-                     filename = paste0("increments_", i, ".png"),
-                     path = figPath,
-                     ggsaveArgs = list(width = 10, height = 5, units = "in", dpi = 300),
-                     types = "png")
-}
 
   sim$cPoolsClean <- cPoolsClean
+
+  if (P(sim)$.plot){
+
+    colsToUse33 <- c("age", "gcids", incCols)
+    rawIncPlots <- m3ToBiomPlots(inc = sim$cPoolsClean[, ..colsToUse33],
+                                 title = "Increments")
+    for (i in seq_along(rawIncPlots)){
+      SpaDES.core::Plots(rawIncPlots[[i]],
+                         filename = paste0("increments_", i, ".png"),
+                         path = P(sim)$.plotPath,
+                         ggsaveArgs = list(width = 10, height = 5, units = "in", dpi = 300),
+                         types = "png")
+    }
+
+    message(crayon::red("User: please review plots of carbon increments: ", P(sim)$.plotPath))
+  }
 
   # 4. finalize increments table
   increments <- cPoolsClean[, .(
@@ -390,6 +377,9 @@ Vol2Biomass <- function(sim){
 }
 
 .inputObjects <- function(sim) {
+
+  # Set output plot path
+  if (is.na(P(sim)$.plotPath)) P(sim)$.plotPath <- file.path(outputPath(sim), "CBM_vol2biomass_figures")
 
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
   # abbreviation and cbm spatial units and ecoBoudnary id is provided with the

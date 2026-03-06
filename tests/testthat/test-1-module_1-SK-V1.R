@@ -19,7 +19,7 @@ test_that("Module: SK curves: V1", {
       cachePath   = spadesTestPaths$cachePath,
       outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
     ),
-    params = list(CBM_vol2biomass = list(.useCache = FALSE)),
+    params = list(CBM_vol2biomass = list(.useCache = FALSE, .plot = TRUE)),
 
     cbmAdmin = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
 
@@ -62,13 +62,7 @@ test_that("Module: SK curves: V1", {
   expect_equal(nrow(simTest$gcIncrements), 1 * 251)
   expect_true("SK_9_55" %in% simTest$gcIncrements$gcids)
 
-
-  ## Check output 'cumPoolsClean' ----
-
-  expect_true(!is.null(simTest$cPoolsClean))
-  expect_true(inherits(simTest$cPoolsClean, "data.table"))
-
-  expect_true("SK_9_55" %in% simTest$cPoolsClean$gcids)
+  incrSums <- simTest$gcIncrements[, lapply(.SD, sum), by = c("gcids")]
 
 
   ## Check output 'cumPoolsClean' ----
@@ -78,6 +72,12 @@ test_that("Module: SK curves: V1", {
 
   expect_equal(nrow(simTest$cPoolsClean), 1 * 251)
   expect_true("SK_9_55" %in% simTest$cPoolsClean$gcids)
+
+
+  ## Check that plots are created ---
+
+  expect_equal(length(list.files(SpaDES.core::params(simTest)$CBM_vol2biomass$.plotPath)),
+               3)
 
 })
 
