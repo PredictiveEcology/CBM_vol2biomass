@@ -62,8 +62,6 @@ test_that("Module: SK curves: V1", {
   expect_equal(nrow(simTest$gcIncrements), 1 * 251)
   expect_true("SK_9_55" %in% simTest$gcIncrements$gcids)
 
-  incrSums <- simTest$gcIncrements[, lapply(.SD, sum), by = c("gcids")]
-
 
   ## Check output 'cumPoolsClean' ----
 
