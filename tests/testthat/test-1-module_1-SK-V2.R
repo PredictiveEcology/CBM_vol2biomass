@@ -19,7 +19,7 @@ test_that("Module: SK curves: V2", {
       cachePath   = spadesTestPaths$cachePath,
       outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
     ),
-    params = list(CBM_vol2biomass = list(.useCache = FALSE)),
+    params = list(CBM_vol2biomass = list(.useCache = FALSE, .plot = FALSE)),
 
     cbmAdmin = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
 
