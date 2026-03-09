@@ -22,6 +22,7 @@ defineModule(sim, list(
     "ggforce", "ggplot2", "ggpubr", "mgcv", "quickPlot", "robustbase", "data.table", "patchwork"
   ),
   parameters = rbind(
+    defineParameter("smooth",    "logical", TRUE, NA, NA, "Smooth curves with the Chapman Richards equation"),
     defineParameter(".plotPath", "character", NA, NA, NA, "Path to directory for output figures"),
     defineParameter(".plot",     "logical", TRUE, NA, NA, "Plot input and translated curves"),
     defineParameter(".useCache", "logical", TRUE, NA, NA, "Cache module events")
@@ -292,8 +293,18 @@ Vol2Biomass <- function(sim){
   set(cPoolsRaw, NULL, "age", as.numeric(cPoolsRaw$age))
   setorderv(cPoolsRaw, c("gcids", "age"))
 
-  # 3. Fixing of non-smooth curves
-  cPoolsClean <- cumPoolsSmooth(cPoolsRaw) |> Cache()
+  # 3. Smooth curves
+  if (P(sim)$smooth){
+
+    cPoolsClean <- cumPoolsSmooth(cPoolsRaw) |> Cache()
+
+  }else{
+
+    cPoolsClean <- cPoolsRaw
+    cPoolsClean[, totMerch_New := totMerch]
+    cPoolsClean[, fol_New      := fol]
+    cPoolsClean[, other_New    := other]
+  }
 
   #Note: this will produce a warning if one of the curve smoothing efforts doesn't converge
   if (P(sim)$.plot){
