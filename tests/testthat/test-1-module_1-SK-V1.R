@@ -44,23 +44,23 @@ test_that("Module: SK curves: V1", {
   expect_true(!is.null(simTest$gcMeta))
   expect_true(inherits(simTest$gcMeta, "data.table"))
 
-  expect_identical(data.table::key(simTest$gcMeta), "gcids")
+  expect_identical(data.table::key(simTest$gcMeta), "gcID")
 
   expect_equal(nrow(simTest$gcMeta), 1)
-  expect_true("SK_9_55" %in% simTest$gcMeta$gcids)
+  expect_true("SK_9_55" %in% simTest$gcMeta$gcID)
 
 
   ## Check output 'gcIncrements' ----
 
   expect_true(!is.null(simTest$gcIncrements))
   expect_true(inherits(simTest$gcIncrements, "data.table"))
-  expect_identical(data.table::key(simTest$gcIncrements), c("gcids", "age"))
+  expect_identical(data.table::key(simTest$gcIncrements), c("gcID", "age"))
 
-  expect_identical(names(simTest$gcIncrements), c("gcids", "age", "merch_inc", "foliage_inc", "other_inc"))
-  expect_identical(data.table::key(simTest$gcIncrements), c("gcids", "age"))
+  expect_identical(names(simTest$gcIncrements), c("gcID", "age", "merch_inc", "foliage_inc", "other_inc"))
+  expect_identical(data.table::key(simTest$gcIncrements), c("gcID", "age"))
 
   expect_equal(nrow(simTest$gcIncrements), 1 * 251)
-  expect_true("SK_9_55" %in% simTest$gcIncrements$gcids)
+  expect_true("SK_9_55" %in% simTest$gcIncrements$gcID)
 
 
   ## Check output 'cumPoolsClean' ----
@@ -69,7 +69,7 @@ test_that("Module: SK curves: V1", {
   expect_true(inherits(simTest$cPoolsClean, "data.table"))
 
   expect_equal(nrow(simTest$cPoolsClean), 1 * 251)
-  expect_true("SK_9_55" %in% simTest$cPoolsClean$gcids)
+  expect_true("SK_9_55" %in% simTest$cPoolsClean$gcID)
 
 
   ## Check that plots are created ---

@@ -90,7 +90,7 @@ defineModule(sim, list(
     createsOutput(
       objectName = "cPoolsClean", objectClass = "data.table",
       desc = "Tonnes of carbon/ha both cumulative and increments,
-      for each growth curve id (in this data.table id and gcids are
+      for each growth curve id (in this data.table id and gcID are
       the same), by age and ecozone")
   )
 ))
@@ -118,8 +118,8 @@ doEvent.CBM_vol2biomass <- function(sim, eventTime, eventType) {
 ReadInputs <- function(sim) {
 
   # Check input
-  if ("gcids" %in% names(sim$userGcMeta)) stop("'userGcMeta' cannot contain \"gcids\"")
-  if ("gcids" %in% names(sim$userGcM3))   stop("'userGcM3' cannot contain \"gcids\"")
+  if ("gcID" %in% names(sim$userGcMeta)) stop("'userGcMeta' cannot contain \"gcID\"")
+  if ("gcID" %in% names(sim$userGcM3))   stop("'userGcM3' cannot contain \"gcID\"")
 
   reqCols <- list(
     userGcLocations = c("admin_abbrev", "eco_id"),
@@ -150,11 +150,11 @@ ReadInputs <- function(sim) {
   if (length(curveID) == 0) stop("userGcLocations requires one or more userGcMeta columns")
 
   sim$gcMeta <- unique(sim$userGcLocations)
-  sim$gcMeta$gcids <- factor(CBMutils::gcidsCreate(sim$gcMeta[, .SD, .SDcols = c(adminID, curveID)]))
+  sim$gcMeta$gcID <- factor(CBMutils::gcidsCreate(sim$gcMeta[, .SD, .SDcols = c(adminID, curveID)]))
 
   sim$gcMeta <- merge(sim$gcMeta, sim$userGcMeta, by = curveID, all.x = TRUE)
-  data.table::setkey(sim$gcMeta, gcids)
-  data.table::setcolorder(sim$gcMeta, c("gcids", "admin_name", adminID, curveID), skip_absent = TRUE)
+  data.table::setkey(sim$gcMeta, gcID)
+  data.table::setcolorder(sim$gcMeta, c("gcID", "admin_name", adminID, curveID), skip_absent = TRUE)
 
   if (any(is.na(sim$gcMeta$curveID))){
     gcMissing <- sim$gcMeta[is.na(curveID), .SD, .SDcols = names(sim$userGcLocations)]
@@ -188,7 +188,7 @@ ReadInputs <- function(sim) {
 Vol2Biomass <- function(sim){
 
   ## user provides userGcM3: incoming cumulative m3/ha.
-  ## table needs 3 columns: gcids, Age, MerchVolume
+  ## table needs 3 columns: gcID, Age, MerchVolume
   # Here we check that ages increment by 1 each timestep,
   # if it does not, it will attempt to resample the table to make it so.
   ageJumps <- sim$userGcM3[, list(jumps = unique(diff(as.numeric(Age)))), by = curveID]
@@ -248,8 +248,9 @@ Vol2Biomass <- function(sim){
   # per above ground biomass pools
 
   gcM3 <- merge(sim$gcMeta, sim$userGcM3, by = "curveID", allow.cartesian = TRUE)[
-    , .(gcids, Age, MerchVolume)]
-  data.table::setkey(gcM3, gcids, Age)
+    , .(gcID, Age, MerchVolume)]
+  data.table::setkey(gcM3, gcID, Age)
+  data.table::setnames(gcM3, "gcID", "gcids")
 
   # 1. Calculate the translation (result is cPools or "cumulative AGcarbon pools")
 
@@ -258,6 +259,7 @@ Vol2Biomass <- function(sim){
   fullSpecies <- unique(sim$gcMeta$species)
 
   gcMeta <- data.table::copy(sim$gcMeta)
+  data.table::setnames(gcMeta, "gcID", "gcids")
   data.table::setnames(gcMeta, "admin_abbrev", "juris_id")
   data.table::setnames(gcMeta, "eco_id", "ecozones")
 
@@ -277,26 +279,30 @@ Vol2Biomass <- function(sim){
     stable3, stable4, stable5, stable6, stable7
   ) |> Cache()
 
+  data.table::setnames(cPools, "gcids", "gcID", skip_absent = TRUE)
+
   # 2. Make sure the provided curves are annual
   ## if not, we need to extrapolate to make them annual
-  minAgeId <- cPools[,.(minAge = max(0, min(age) - 1)), by = "gcids"]
-  fill0s <- minAgeId[,.(age = seq(from = 0, to = minAge, by = 1)), by = "gcids"]
+  minAgeId <- cPools[,.(minAge = max(0, min(age) - 1)), by = "gcID"]
+  fill0s <- minAgeId[,.(age = seq(from = 0, to = minAge, by = 1)), by = "gcID"]
   # these are going to be 0s
-  carbonVars <- data.table(gcids = unique(fill0s$gcids),
+  carbonVars <- data.table(gcID = unique(fill0s$gcID),
                            totMerch = 0,
                            fol = 0,
                            other = 0 )
-  fiveOf7cols <- fill0s[carbonVars, on = "gcids"]
-  otherVars <- cPools[,.(id = unique(id), ecozone = unique(ecozone)), by = "gcids"]
-  add0s <- fiveOf7cols[otherVars, on = "gcids"]
+  fiveOf7cols <- fill0s[carbonVars, on = "gcID"]
+  otherVars <- cPools[,.(id = unique(id), ecozone = unique(ecozone)), by = "gcID"]
+  add0s <- fiveOf7cols[otherVars, on = "gcID"]
   cPoolsRaw <- rbindlist(list(cPools,add0s), use.names = TRUE)
   set(cPoolsRaw, NULL, "age", as.numeric(cPoolsRaw$age))
-  setorderv(cPoolsRaw, c("gcids", "age"))
+  setorderv(cPoolsRaw, c("gcID", "age"))
 
   # 3. Smooth curves
   if (P(sim)$smooth){
 
+    data.table:::setnames(cPoolsRaw, "gcID", "gcids")
     cPoolsClean <- cumPoolsSmooth(cPoolsRaw) |> Cache()
+    data.table:::setnames(cPoolsClean, "gcids", "gcID")
 
   }else{
 
@@ -309,6 +315,7 @@ Vol2Biomass <- function(sim){
   #Note: this will produce a warning if one of the curve smoothing efforts doesn't converge
   if (P(sim)$.plot){
 
+    cPoolsClean[, gcids := gcID]
     cPoolsSmoothPlot <- m3ToBiomPlots(inc = cPoolsClean,
                                       title = "Cumulative merch/fol/other by gcid")
 
@@ -336,7 +343,7 @@ Vol2Biomass <- function(sim){
   cPoolsClean <- copy(cPoolsClean) #TEMP FIX: making a copy of this table deals with the shallow table warning that happens in the line below.
   ## This warning likely originates from how the table is dealt with in cumPoolsSmooth or cumPoolsCreate.
   cPoolsClean[, (incCols) := lapply(.SD, function(x) c(NA, diff(x))), .SDcols = colNames,
-                by = eval("gcids")]
+                by = "gcID"]
 
   sim$cPoolsClean <- cPoolsClean
 
@@ -358,12 +365,12 @@ Vol2Biomass <- function(sim){
 
   # 4. finalize increments table
   increments <- cPoolsClean[, .(
-    gcids, age,
+    gcID, age,
     merch_inc   = incMerch,
     foliage_inc = incFol,
     other_inc   = incOther
   )]
-  data.table::setkey(increments, gcids, age)
+  data.table::setkey(increments, gcID, age)
 
   ## replace increments that are NA with 0s
   increments[is.na(merch_inc),   merch_inc   := 0]
@@ -375,9 +382,9 @@ Vol2Biomass <- function(sim){
   # Assertions
   if (isTRUE(P(sim)$doAssertions)) {
     # All should have same min age
-    if (length(unique(increments[, min(age), by = "gcids"]$V1)) != 1)
+    if (length(unique(increments[, min(age), by = "gcID"]$V1)) != 1)
       stop("All ages should start at the same age for each curveID")
-    if (length(unique(increments[, max(age), by = "gcids"]$V1)) != 1)
+    if (length(unique(increments[, max(age), by = "gcID"]$V1)) != 1)
       stop("All ages should end at the same age for each curveID")
   }
 
