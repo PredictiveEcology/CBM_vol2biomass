@@ -359,9 +359,9 @@ Vol2Biomass <- function(sim){
   # 4. finalize increments table
   increments <- cPoolsClean[, .(
     gcids, age,
-    merch_inc   = totMerch,
-    foliage_inc = fol,
-    other_inc   = other
+    merch_inc   = incMerch,
+    foliage_inc = incFol,
+    other_inc   = incOther
   )]
   data.table::setkey(increments, gcids, age)
 
