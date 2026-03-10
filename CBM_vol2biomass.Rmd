@@ -36,13 +36,13 @@ The module uses the subset of @boudewyn2007 empirical models that calculate  vol
 ## Inputs
 
 The pieces of information needed to apply the @boudewyn2007 conversion models are growth curves, the leading species for that growth curve, and where on the landscape (which pixel) each growth curve applies to. The user provides the stand-level $m^3/ha$ via `userGCM3`. In this module, `gcMeta` links the growth curve to the leading species,
-and the objects `spatialDT` provides location information. The table below lists the inputs to this module. Inputs `table3` through `table7` are the @boudewyn2007 parameters which are hosted on the National Forest Information System website. We provide the `cbmAdmin` object to help user with the equivalence between provincial and territorial boudaries, Canadian ecozones (as defined in the shapefile use in our model [here](http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip)), and [`spatialUnit`](https://predictiveecology.github.io/spadesCBM/lexicon.html#ecozone-vs-spatial-unit)
+and the objects `userGcSPU` provides location information. The table below lists the inputs to this module. Inputs `table3` through `table7` are the @boudewyn2007 parameters which are hosted on the National Forest Information System website. We provide the `cbmAdmin` object to help user with the equivalence between provincial and territorial boudaries, Canadian ecozones (as defined in the shapefile use in our model [here](http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip)), and [`spatialUnit`](https://predictiveecology.github.io/spadesCBM/lexicon.html#ecozone-vs-spatial-unit)
 
 | Name          | Class      | Description | Source                                                                                                                                    |
 |------------|------------|-----------------------|--------------------------|
 | userGcM3      | Data table |  User provided growth curve data  | [Google Drive](https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true) |
-| gcMeta        | Data table |  Species and growth curve IDs | [Google Drive](https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/)   |
-| spatialDT    | Data table  | Summary table of raster input data with 1 row for each `masterRaster pixel` that is not `NA` | CBM_dataPrep_SK |
+| userGcSPU | Data table | Table of growth curves and spatial unit combinations for each cohort | CBM_dataPrep |
+| userGcMeta | Data table |  Species and growth curve IDs | [Google Drive](https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/)   |
 | table3       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv)        |
 | table4       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv)        |
 | table5       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv)        |
@@ -177,7 +177,7 @@ The module automatically plots both the direct translation (no smoothing `totMer
 |-------------------|------------|-------------|
 | cumPoolsClean     | Data table | Tonnes of carbon/ha both cumulative and increments, for each growth curve id, by age and ecozone |
 | growth_increments | Data table | growth increment matrix |
-| gcMetaAllCols     | Data table | `gcMeta` with ecozones |
+| gcMetaMeta     | Data table | Growth curve metadata |
 | volCurves         | Plot |  Plots of all growth curves provided by the user |
 
 
