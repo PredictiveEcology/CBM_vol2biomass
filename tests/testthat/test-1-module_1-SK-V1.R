@@ -17,25 +17,24 @@ test_that("Module: SK curves: V1", {
       packagePath = spadesTestPaths$packagePath,
       inputPath   = spadesTestPaths$inputPath,
       cachePath   = spadesTestPaths$cachePath,
-      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
+      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName),
+      testdata    = spadesTestPaths$testdata
     ),
     params = list(CBM_vol2biomass = list(.useCache = FALSE, .plot = TRUE)),
 
-    cbmAdmin = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
+    cbmAdmin = read.csv(file.path(paths$testdata, "cbmAdmin.csv")),
 
     userGcLocations = data.frame(admin_abbrev = "SK", eco_id = 9, curveID = 55),
-    userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v1", "userGcMeta.csv")),
-    userGcM3   = read.csv(file.path(spadesTestPaths$testdata, "SK_v1", "userGcM3.csv"))
+    userGcMeta = read.csv(file.path(paths$testdata, "SK_v1", "userGcMeta.csv")),
+    userGcM3   = read.csv(file.path(paths$testdata, "SK_v1", "userGcM3.csv"))
   )
 
   # Run simInit
   simTestInit <- SpaDES.core::simInit2(simInitInput)
-
   expect_s4_class(simTestInit, "simList")
 
   # Run spades
   simTest <- SpaDES.core::spades(simTestInit)
-
   expect_s4_class(simTest, "simList")
 
 

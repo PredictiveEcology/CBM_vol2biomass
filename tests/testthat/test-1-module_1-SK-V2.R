@@ -17,29 +17,28 @@ test_that("Module: SK curves: V2", {
       packagePath = spadesTestPaths$packagePath,
       inputPath   = spadesTestPaths$inputPath,
       cachePath   = spadesTestPaths$cachePath,
-      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
+      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName),
+      testdata    = spadesTestPaths$testdata
     ),
     params = list(CBM_vol2biomass = list(.useCache = FALSE, .plot = FALSE)),
 
-    cbmAdmin = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
+    cbmAdmin = read.csv(file.path(paths$testdata, "cbmAdmin.csv")),
 
     userGcLocations = rbind(
       data.frame(admin_abbrev = "SK", eco_id = 6, species = "Trembling aspen", prodClass = "M"),
       data.frame(admin_abbrev = "SK", eco_id = 9, species = "Trembling aspen", prodClass = "P"),
       data.frame(admin_abbrev = "SK", eco_id = 9, species = "Jack pine",       prodClass = "P")
     ),
-    userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcMeta.csv")),
-    userGcM3   = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcM3.csv"))
+    userGcMeta = read.csv(file.path(paths$testdata, "SK_v2", "userGcMeta.csv")),
+    userGcM3   = read.csv(file.path(paths$testdata, "SK_v2", "userGcM3.csv"))
   )
 
   # Run simInit
   simTestInit <- SpaDES.core::simInit2(simInitInput)
-
   expect_s4_class(simTestInit, "simList")
 
   # Run spades
   simTest <- SpaDES.core::spades(simTestInit)
-
   expect_s4_class(simTest, "simList")
 
 
@@ -98,27 +97,26 @@ test_that("Module: SK curves: V2: without curve smoothing", {
       packagePath = spadesTestPaths$packagePath,
       inputPath   = spadesTestPaths$inputPath,
       cachePath   = spadesTestPaths$cachePath,
-      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
+      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName),
+      testdata    = spadesTestPaths$testdata
     ),
     params = list(CBM_vol2biomass = list(.useCache = FALSE, .plot = FALSE, smooth = FALSE)),
 
-    cbmAdmin = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
+    cbmAdmin = read.csv(file.path(paths$testdata, "cbmAdmin.csv")),
 
     userGcLocations = rbind(
       data.frame(admin_abbrev = "SK", eco_id = 9, species = "Trembling aspen", prodClass = "P")
     ),
-    userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcMeta.csv")),
-    userGcM3   = read.csv(file.path(spadesTestPaths$testdata, "SK_v2", "userGcM3.csv"))
+    userGcMeta = read.csv(file.path(paths$testdata, "SK_v2", "userGcMeta.csv")),
+    userGcM3   = read.csv(file.path(paths$testdata, "SK_v2", "userGcM3.csv"))
   )
 
   # Run simInit
   simTestInit <- SpaDES.core::simInit2(simInitInput)
-
   expect_s4_class(simTestInit, "simList")
 
   # Run spades
   simTest <- SpaDES.core::spades(simTestInit)
-
   expect_s4_class(simTest, "simList")
 
   # Check output 'gcIncrements'
