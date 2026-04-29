@@ -166,12 +166,12 @@ ReadInputs <- function(sim) {
   }
 
   ## Check that all required columns are available, and if not, add them:
-  if (any(!c("canfi_species", "sw_hw", "genus") %in% names(sim$gcMeta))){
+  if (any(!c("sw", "canfi_species", "genus") %in% names(sim$gcMeta))){
 
     sppMatchTable <- CBMutils::sppMatch(
       sim$gcMeta$species, return = c("CanfiCode", "Genus", "Broadleaf"))[, .(
         canfi_species = CanfiCode,
-        sw_hw         = data.table::fifelse(Broadleaf, "hw", "sw"),
+        sw            = !Broadleaf,
         genus         = Genus
       )]
 

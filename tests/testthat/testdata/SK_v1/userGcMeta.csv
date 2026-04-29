@@ -1,2 +1,2 @@
-curveID,species,sw_hw,canfi_species,genus
-55,Trembling aspen,hw,1201,POPU
+curveID,species,sw,canfi_species,genus
+55,Trembling aspen,FALSE,1201,POPU
