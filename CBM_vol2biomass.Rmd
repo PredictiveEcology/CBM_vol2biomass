@@ -183,6 +183,6 @@ The module automatically plots both the direct translation (no smoothing `totMer
 
 ## Links to other modules  
 - [CBM_defaults](https://github.com/PredictiveEcology/CBM_defaults)
-- [CBM_datPrep](https://github.com/PredictiveEcology/CBM_dataPrep)
+- [CBM_dataPrep](https://github.com/PredictiveEcology/CBM_dataPrep)
 - [CBM_dataPrep_SK](https://github.com/PredictiveEcology/CBM_dataPrep_SK.git)
 - [CBM_core](https://github.com/PredictiveEcology/CBM_core)
