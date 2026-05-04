@@ -17,13 +17,14 @@ test_that("Module: SK curves: V1", {
       packagePath = spadesTestPaths$packagePath,
       inputPath   = spadesTestPaths$inputPath,
       cachePath   = spadesTestPaths$cachePath,
-      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
+      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName),
+      testdata    = spadesTestPaths$testdata
     ),
     params = list(CBM_vol2biomass = list(.useCache = FALSE)),
 
-    cbmAdmin   = read.csv(file.path(spadesTestPaths$testdata, "cbmAdmin.csv")),
-    userGcMeta = read.csv(file.path(spadesTestPaths$testdata, "SK_v1", "userGcMeta.csv")),
-    userGcM3   = read.csv(file.path(spadesTestPaths$testdata, "SK_v1", "userGcM3.csv")),
+    cbmAdmin   = read.csv(file.path(paths$testdata, "cbmAdmin.csv")),
+    userGcMeta = read.csv(file.path(paths$testdata, "SK_v1", "userGcMeta.csv")),
+    userGcM3   = read.csv(file.path(paths$testdata, "SK_v1", "userGcM3.csv")),
 
     curveID   = "curveID",
     userGcSPU = data.frame(
