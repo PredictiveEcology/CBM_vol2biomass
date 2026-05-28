@@ -411,7 +411,7 @@ Vol2Biomass <- function(sim){
     sim$cbmAdmin <- prepInputs(url = sim$cbmAdminURL,
                                targetFile = "cbmAdmin.csv",
                                destinationPath = inputPath(sim),
-                               fun = fread)
+                               fun = data.table::fread)
   }
 
   ## tables from Boudewyn -- all downloaded from the NFIS site.
@@ -422,7 +422,7 @@ Vol2Biomass <- function(sim){
     }
     sim$table3 <- prepInputs(url = sim$table3URL,
                              destinationPath = inputPath(sim),
-                             fun = fread)
+                             fun = data.table::fread)
       }
 
   if (!suppliedElsewhere("table4", sim)) {
@@ -431,7 +431,7 @@ Vol2Biomass <- function(sim){
     }
     sim$table4 <- prepInputs(url = sim$table4URL,
                              destinationPath = inputPath(sim),
-                             fun = fread)
+                             fun = data.table::fread)
       }
 
 
@@ -441,7 +441,7 @@ Vol2Biomass <- function(sim){
     }
     sim$table5 <- prepInputs(url = sim$table5URL,
                              destinationPath = inputPath(sim),
-                             fun = fread)
+                             fun = data.table::fread)
       }
 
 
@@ -451,7 +451,7 @@ Vol2Biomass <- function(sim){
     }
     sim$table6 <- prepInputs(url = sim$table6URL,
                              destinationPath = inputPath(sim),
-                             fun = fread)
+                             fun = data.table::fread)
       }
 
   if (!suppliedElsewhere("table7", sim)) {
@@ -460,7 +460,7 @@ Vol2Biomass <- function(sim){
     }
     sim$table7 <- prepInputs(url = sim$table7URL,
                              destinationPath = inputPath(sim),
-                             fun = fread)
+                             fun = data.table::fread)
   }
 
 
