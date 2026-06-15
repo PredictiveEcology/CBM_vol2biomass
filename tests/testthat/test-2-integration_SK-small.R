@@ -9,56 +9,45 @@ test_that("Integration: SK", {
   projectName <- "integration-SK"
   times       <- list(start = 1985, end = 1985)
 
-  simInitInput <- SpaDEStestMuffleOutput(
+  simInitInput <- SpaDES.project::setupProject(
 
-    SpaDES.project::setupProject(
+    modules = c(
+      paste0("PredictiveEcology/CBM_defaults@",    Sys.getenv("BRANCH_NAME", "development")),
+      paste0("PredictiveEcology/CBM_dataPrep_SK@", Sys.getenv("BRANCH_NAME", "development")),
+      paste0("PredictiveEcology/CBM_dataPrep@",    Sys.getenv("BRANCH_NAME", "development")),
+      "CBM_vol2biomass",
+      paste0("PredictiveEcology/CBM_core@",        Sys.getenv("BRANCH_NAME", "development"))
+    ),
+    times   = times,
+    paths   = list(
+      projectPath = spadesTestPaths$projectPath,
+      modulePath  = spadesTestPaths$temp$modules,
+      packagePath = spadesTestPaths$packagePath,
+      inputPath   = spadesTestPaths$inputPath,
+      cachePath   = spadesTestPaths$cachePath,
+      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
+    ),
+    params = list(CBM_vol2biomass = list(.useCache = FALSE)),
 
-      modules = c(
-        paste0("PredictiveEcology/CBM_defaults@",    Sys.getenv("BRANCH_NAME", "development")),
-        paste0("PredictiveEcology/CBM_dataPrep_SK@", Sys.getenv("BRANCH_NAME", "development")),
-        paste0("PredictiveEcology/CBM_dataPrep@",    Sys.getenv("BRANCH_NAME", "development")),
-        "CBM_vol2biomass",
-        paste0("PredictiveEcology/CBM_core@",        Sys.getenv("BRANCH_NAME", "development"))
-      ),
-      times   = times,
-      paths   = list(
-        projectPath = spadesTestPaths$projectPath,
-        modulePath  = spadesTestPaths$temp$modules,
-        packagePath = spadesTestPaths$packagePath,
-        inputPath   = spadesTestPaths$inputPath,
-        cachePath   = spadesTestPaths$cachePath,
-        outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
-      ),
-      params = list(CBM_vol2biomass = list(.useCache = FALSE)),
+    require = c("googledrive", "terra"),
 
-      require = c("googledrive", "terra"),
-
-      masterRaster = terra::rast(
-        ext  = c(xmin = -687696, xmax = -681036, ymin = 711955, ymax = 716183),
-        res  = 30,
-        vals = 0L,
-        crs  = "EPSG:3979"
-      )
+    masterRaster = terra::rast(
+      ext  = c(xmin = -687696, xmax = -681036, ymin = 711955, ymax = 716183),
+      res  = 30,
+      vals = 0L,
+      crs  = "EPSG:3979"
     )
   )
 
   # Run simInit
-  simTestInit <- SpaDEStestMuffleOutput(
-    SpaDES.core::simInit2(simInitInput)
-  )
-
+  simTestInit <- suppressWarnings(SpaDES.core::simInit2(simInitInput))
   expect_s4_class(simTestInit, "simList")
 
   # Run spades
-  simTest <- SpaDEStestMuffleOutput(
-    SpaDES.core::spades(simTestInit)
-  )
-
+  simTest <- suppressWarnings(SpaDES.core::spades(simTestInit))
   expect_s4_class(simTest, "simList")
 
-
-  ## Check outputs ----
-
+  # Check outputs
   expect_true(!is.null(simTest$emissionsProducts))
 
 })

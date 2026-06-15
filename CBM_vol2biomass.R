@@ -12,59 +12,31 @@ defineModule(sim, list(
     person("Susan",   "Murray",    email = "murray.e.susan@gmail.com",           role = c("ctb"))
   ),
   childModules = character(0),
-  version = list(CBM_vol2biomass = "1.0.0"),
+  version = list(CBM_vol2biomass = "1.0.0.9000"),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = deparse(list("README.txt", "CBM_vol2biomass.Rmd")),
   reqdPkgs = list(
-    "PredictiveEcology/CBMutils@v2.5.1",
+    "PredictiveEcology/CBMutils@development (>=2.5.2)",
     "ggforce", "ggplot2", "ggpubr", "mgcv", "quickPlot", "robustbase", "data.table", "patchwork"
   ),
   parameters = rbind(
-    defineParameter(
-      "outputFigurePath", "character", NA, NA, NA,
-      paste("Filepath to a directory where output figures will be saved.",
-            "The default is a directory named 'CBM_vol2biomass_figures' within the simulation outputs directory.")
-    ),
-    defineParameter(
-      ".plotInitialTime", "numeric", NA, NA, NA,
-      "Describes the simulation time at which the first plot event should occur."
-    ),
-    defineParameter(
-      ".plotInterval", "numeric", NA, NA, NA,
-      "Describes the simulation time interval between plot events."
-    ),
-    defineParameter(
-      ".saveInitialTime", "numeric", NA, NA, NA,
-      "Describes the simulation time at which the first save event should occur."
-    ),
-    defineParameter(
-      ".saveInterval", "numeric", NA, NA, NA,
-      "This describes the simulation time interval between save events."
-    ),
-    defineParameter(
-      ".useCache", "logical", TRUE, NA, NA,
-      paste(
-        "Should this entire module be run with caching activated?",
-        "This is generally intended for data-type modules, where stochasticity",
-        "and time are not relevant"
-      )
-    )
+    defineParameter("smooth",    "logical", TRUE, NA, NA, "Smooth curves with the Chapman Richards equation"),
+    defineParameter(".plotPath", "character", NA, NA, NA, "Path to directory for output figures"),
+    defineParameter(".plot",     "logical", TRUE, NA, NA, "Plot input and translated curves"),
+    defineParameter(".useCache", "logical", TRUE, NA, NA, "Cache module events")
   ),
   inputObjects = bindrows(
     expectsInput(
-      objectName = "curveID", objectClass = "character",
-      desc = "Column(s) uniquely defining each growth curve in `userGcSPU` and `userGcMeta`. Defaults to 'curveID'."),
-    expectsInput(
-      objectName = "userGcSPU", objectClass = "data.frame",
-      desc = "Growth curve locations with columns 'spatial_unit_id' and all columns named by `curveID`"),
+      objectName = "userGcLocations", objectClass = "data.frame",
+      desc = "Growth curve locations with columns 'admin_abbrev', 'eco_id', and one or more columns in 'userGcMeta'"),
     expectsInput(
       objectName = "userGcMeta", objectClass = "data.frame",
-      desc = "Growth curve metadata with columns 'curveID' and all columns named by `curveID`"),
+      desc = "Growth curve metadata table with key 'curveID' and other curve identifiers"),
     expectsInput(
       objectName = "userGcM3", objectClass = "data.frame",
-      desc = "Growth curve volumes with columns 'curveID', `Age`, and `MerchVolume`."),
+      desc = "Growth curve volume table with columns 'curveID', 'Age', and 'MerchVolume'"),
     expectsInput(
       objectName = "cbmAdmin", objectClass = "data.frame",
       desc = paste("Provides equivalent between provincial boundaries,",
@@ -110,19 +82,16 @@ defineModule(sim, list(
   ),
   outputObjects = bindrows(
     createsOutput(
-      objectName = "volCurves", objectClass = "plot",
-      desc = "Plot of all the growth curve provided by the user"),
-    createsOutput(
       objectName = "gcMeta", objectClass = "data.table",
-      desc = "Growth curve metadata with key 'gcids'"),
+      desc = "Growth curve metadata"),
+    createsOutput(
+      objectName = "gcIncrements", objectClass = "data.table",
+      desc = "Growth curve carbon increments in MgC/ha/year"),
     createsOutput(
       objectName = "cPoolsClean", objectClass = "data.table",
       desc = "Tonnes of carbon/ha both cumulative and increments,
-      for each growth curve id (in this data.table id and gcids are
-      the same), by age and ecozone"),
-    createsOutput(
-      objectName = "growth_increments", objectClass = "data.table",
-      desc = "Carbon increment matrix by age for each gcids")
+      for each growth curve id (in this data.table id and gcID are
+      the same), by age and ecozone")
   )
 ))
 
@@ -149,18 +118,23 @@ doEvent.CBM_vol2biomass <- function(sim, eventTime, eventType) {
 ReadInputs <- function(sim) {
 
   # Check input
-  if ("gcids" %in% sim$curveID)           stop("'curveID' cannot contain \"gcids\"")
-  if ("gcids" %in% names(sim$userGcMeta)) stop("'userGcMeta' cannot contain \"gcids\"")
-  if ("gcids" %in% names(sim$userGcM3))   stop("'userGcM3' cannot contain \"gcids\"")
+  if ("gcID" %in% names(sim$userGcMeta)) stop("'userGcMeta' cannot contain \"gcID\"")
+  if ("gcID" %in% names(sim$userGcM3))   stop("'userGcM3' cannot contain \"gcID\"")
 
   reqCols <- list(
-    userGcSPU  = c(sim$curveID, "spatial_unit_id"),
-    userGcMeta = c("curveID", sim$curveID, "species"),
-    userGcM3   = c("curveID", "Age", "MerchVolume")
+    userGcLocations = c("admin_abbrev", "eco_id"),
+    userGcMeta      = c("curveID", "species"),
+    userGcM3        = c("curveID", "Age", "MerchVolume")
   )
 
-  if (!all(reqCols$userGcSPU %in% names(sim$userGcSPU))) stop(
-    "userGcSPU must have columns: ", paste(shQuote(reqCols$userGcSPU), collapse = ", "))
+  for (tableName in names(reqCols)){
+    if (!data.table::is.data.table(sim[[tableName]])){
+      sim[[tableName]] <- data.table::as.data.table(sim[[tableName]])
+    }
+  }
+
+  if (!all(reqCols$userGcLocations %in% names(sim$userGcLocations))) stop(
+    "userGcLocations must have columns: ", paste(shQuote(reqCols$userGcLocations), collapse = ", "))
   if (!all(reqCols$gcMeta %in% names(sim$gcMeta))) stop(
     "gcMeta must have columns: ", paste(shQuote(reqCols$gcMeta), collapse = ", "))
   if (!all(reqCols$userGcM3 %in% names(sim$userGcM3))) stop(
@@ -169,29 +143,40 @@ ReadInputs <- function(sim) {
   if (!all(sim$userGcMeta$curveID %in% sim$userGcM3$curveID)) {
     stop("There is a missmatch in the 'curveID' columns of userGcMeta and the userGcM3")
   }
-  for (col in sim$curveID){
-    if (!all(sim$userGcSPU[[col]] %in% sim$userGcMeta[[col]])) {
-      stop("There is a missmatch in the ", sQuote(col), " columns of userGcSPU and userGcMeta")
-    }
+
+  # Initiate gcMeta
+  adminID <- c("admin_abbrev", "eco_id")
+  curveID <- setdiff(names(sim$userGcLocations), c("admin_name", adminID))
+  if (length(curveID) == 0) stop("userGcLocations requires one or more userGcMeta columns")
+
+  sim$gcMeta <- unique(sim$userGcLocations)
+  sim$gcMeta$gcID <- factor(CBMutils::gcidsCreate(sim$gcMeta[, .SD, .SDcols = c(adminID, curveID)]))
+
+  sim$gcMeta <- merge(sim$gcMeta, sim$userGcMeta, by = curveID, all.x = TRUE)
+  data.table::setkey(sim$gcMeta, gcID)
+  data.table::setcolorder(sim$gcMeta, c("gcID", "admin_name", adminID, curveID), skip_absent = TRUE)
+
+  if (any(is.na(sim$gcMeta$curveID))){
+    gcMissing <- sim$gcMeta[is.na(curveID), .SD, .SDcols = names(sim$userGcLocations)]
+    stop("userGcLocations do not match a curve in userGcMeta:\n", paste(
+      sapply(1:nrow(gcMissing), function(i) paste(
+        sapply(names(gcMissing), function(c) paste0(c, ": ", gcMissing[i,][[c]])),
+        collapse = "; ")),
+      collapse = "\n"))
   }
 
-  sim$cbmAdmin   <- data.table::as.data.table(sim$cbmAdmin)
-  sim$userGcSPU  <- data.table::as.data.table(sim$userGcSPU)
-  sim$userGcMeta <- data.table::as.data.table(sim$userGcMeta)
-  sim$userGcM3   <- data.table::as.data.table(sim$userGcM3)
-
   ## Check that all required columns are available, and if not, add them:
-  if (any(!c("canfi_species", "sw_hw", "genus") %in% names(sim$userGcMeta))){
+  if (any(!c("sw", "canfi_species", "genus") %in% names(sim$gcMeta))){
 
     sppMatchTable <- CBMutils::sppMatch(
-      sim$userGcMeta$species, return = c("CanfiCode", "Genus", "Broadleaf"))[, .(
+      sim$gcMeta$species, return = c("CanfiCode", "Genus", "Broadleaf"))[, .(
         canfi_species = CanfiCode,
-        sw_hw         = data.table::fifelse(Broadleaf, "hw", "sw"),
+        sw            = !Broadleaf,
         genus         = Genus
       )]
 
-    sim$userGcMeta <- cbind(
-      sim$userGcMeta[, .SD, .SDcols = setdiff(names(sim$userGcMeta), names(sppMatchTable))],
+    sim$gcMeta <- cbind(
+      sim$gcMeta[, .SD, .SDcols = setdiff(names(sim$gcMeta), names(sppMatchTable))],
       sppMatchTable)
     rm(sppMatchTable)
   }
@@ -203,7 +188,7 @@ ReadInputs <- function(sim) {
 Vol2Biomass <- function(sim){
 
   ## user provides userGcM3: incoming cumulative m3/ha.
-  ## table needs 3 columns: gcids, Age, MerchVolume
+  ## table needs 3 columns: gcID, Age, MerchVolume
   # Here we check that ages increment by 1 each timestep,
   # if it does not, it will attempt to resample the table to make it so.
   ageJumps <- sim$userGcM3[, list(jumps = unique(diff(as.numeric(Age)))), by = curveID]
@@ -223,21 +208,22 @@ Vol2Biomass <- function(sim){
   }
 
   # Creates/sets the vol2biomass outputs subfolder (inside the general outputs folder)
-  figPath <- file.path(outputPath(sim), "CBM_vol2biomass_figures")
-  sim$volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = "curveID", colour = factor("curveID"))) +
-    geom_line() + theme_bw()
-  SpaDES.core::Plots(sim$volCurves,
-                     filename = "volCurves",
-                     path = figPath,
-                     ggsaveArgs = list(width = 7, height = 5, units = "in", dpi = 300),
-                     types = "png")
-  message("User: please look at the curve you provided via sim$volCurves or the volCurves.png file in the outputs folder")
+  if (P(sim)$.plot){
+
+    volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = curveID, colour = factor(curveID))) +
+      geom_line() + labs(colour = "curveID") + theme_bw()
+
+    SpaDES.core::Plots(volCurves,
+                       filename = "volCurves",
+                       path = P(sim)$.plotPath,
+                       ggsaveArgs = list(width = 7, height = 5, units = "in", dpi = 300),
+                       types = "png")
+
+    message("User: please review plots of input curves: ", P(sim)$.plotPath)
+  }
 
 
   # START reducing Biomass model parameter tables --------------------------------------------
-
-  thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% na.omit(sim$userGcSPU$spatial_unit_id), ]
-
 
   ## TEMPORARY: Current Boudewyn tables label Yukon as YT instead of YK. This hard coded fix ensures they are properly labeled as YK
   sim$table3$juris_id[sim$table3$juris_id == "YT"] <- "YK"
@@ -248,11 +234,12 @@ Vol2Biomass <- function(sim){
   # subsetting Boudewyn tables to the ecozones/admin boundaries of the study area.
   # Some ecozones/boundaries are not in these tables, in these cases, the function replaces them in
   # thisAdmin to the closest equivalent present in the Boudewyn tables.
-  stable3 <- boudewynSubsetTables(sim$table3, thisAdmin, thisAdmin$EcoBoundaryID)
-  stable4 <- boudewynSubsetTables(sim$table4, thisAdmin, thisAdmin$EcoBoundaryID)
-  stable5 <- boudewynSubsetTables(sim$table5, thisAdmin, thisAdmin$EcoBoundaryID)
-  stable6 <- boudewynSubsetTables(sim$table6, thisAdmin, thisAdmin$EcoBoundaryID)
-  stable7 <- boudewynSubsetTables(sim$table7, thisAdmin, thisAdmin$EcoBoundaryID)
+  thisAdmin <- unique(sim$gcMeta[, .(juris_id = admin_abbrev, ecozone = eco_id)])
+  stable3 <- boudewynSubsetTables(sim$table3, thisAdmin)
+  stable4 <- boudewynSubsetTables(sim$table4, thisAdmin)
+  stable5 <- boudewynSubsetTables(sim$table5, thisAdmin)
+  stable6 <- boudewynSubsetTables(sim$table6, thisAdmin)
+  stable7 <- boudewynSubsetTables(sim$table7, thisAdmin)
 
 
   # START processing curves -------------------------------------------
@@ -260,28 +247,10 @@ Vol2Biomass <- function(sim){
   # Process curves from m3/ha to tonnes of C/ha then to annual increments
   # per above ground biomass pools
 
-  # Create a new unique key defining each growth curve and spatial_unit_id
-  sim$userGcSPU <- cbind(
-    gcids = factor(
-      CBMutils::gcidsCreate(sim$userGcSPU[, .SD, .SDcols = c("spatial_unit_id", sim$curveID)])
-    ),
-    sim$userGcSPU)
-  data.table::setkey(sim$userGcSPU, gcids)
-
-  sim$gcMeta <- merge(sim$userGcSPU, sim$userGcMeta, by = sim$curveID)
-  data.table::setcolorder(sim$gcMeta, which(names(sim$gcMeta) == "gcids"))
-  data.table::setkey(sim$gcMeta, gcids)
-
-  if (!"ecozones" %in% names(sim$gcMeta)){
-    sim$gcMeta <- merge(
-      sim$gcMeta,
-      sim$cbmAdmin[, .(spatial_unit_id = SpatialUnitID, ecozones = EcoBoundaryID)],
-      by = "spatial_unit_id")
-  }
-
   gcM3 <- merge(sim$gcMeta, sim$userGcM3, by = "curveID", allow.cartesian = TRUE)[
-    , .(gcids, Age, MerchVolume)]
-  data.table::setkey(gcM3, gcids, Age)
+    , .(gcID, Age, MerchVolume)]
+  data.table::setkey(gcM3, gcID, Age)
+  data.table::setnames(gcM3, "gcID", "gcids")
 
   # 1. Calculate the translation (result is cPools or "cumulative AGcarbon pools")
 
@@ -289,43 +258,78 @@ Vol2Biomass <- function(sim){
   # spatial unit and ecozone)
   fullSpecies <- unique(sim$gcMeta$species)
 
-  cPools <- cumPoolsCreate(fullSpecies, sim$gcMeta, gcM3,
-                             stable3, stable4, stable5, stable6, stable7, thisAdmin
-                             ) |> Cache()
+  gcMeta <- data.table::copy(sim$gcMeta)
+  data.table::setnames(gcMeta, "gcID", "gcids")
+  data.table::setnames(gcMeta, "admin_abbrev", "juris_id")
+  data.table::setnames(gcMeta, "eco_id", "ecozones")
+
+  ## Temporary: this is required by cumPoolsCreate
+  if (!"spatial_unit_id" %in% names(gcMeta)){
+    gcMeta <- merge(
+      gcMeta,  data.table::as.data.table(sim$cbmAdmin)[
+        , .(juris_id = abreviation, ecozones = EcoBoundaryID, spatial_unit_id = SpatialUnitID)],
+      by = c("juris_id", "ecozones"))
+    data.table::setkey(gcMeta, gcids)
+    data.table::setcolorder(gcMeta)
+  }
+
+  cPools <- cumPoolsCreate(
+    fullSpecies, gcMeta, gcM3,
+    thisAdmin = data.table::as.data.table(sim$cbmAdmin),
+    stable3, stable4, stable5, stable6, stable7
+  ) |> Cache()
+
+  data.table::setnames(cPools, "gcids", "gcID", skip_absent = TRUE)
 
   # 2. Make sure the provided curves are annual
   ## if not, we need to extrapolate to make them annual
-  minAgeId <- cPools[,.(minAge = max(0, min(age) - 1)), by = "gcids"]
-  fill0s <- minAgeId[,.(age = seq(from = 0, to = minAge, by = 1)), by = "gcids"]
+  minAgeId <- cPools[,.(minAge = max(0, min(age) - 1)), by = "gcID"]
+  fill0s <- minAgeId[,.(age = seq(from = 0, to = minAge, by = 1)), by = "gcID"]
   # these are going to be 0s
-  carbonVars <- data.table(gcids = unique(fill0s$gcids),
+  carbonVars <- data.table(gcID = unique(fill0s$gcID),
                            totMerch = 0,
                            fol = 0,
                            other = 0 )
-  fiveOf7cols <- fill0s[carbonVars, on = "gcids"]
-  otherVars <- cPools[,.(id = unique(id), ecozone = unique(ecozone)), by = "gcids"]
-  add0s <- fiveOf7cols[otherVars, on = "gcids"]
+  fiveOf7cols <- fill0s[carbonVars, on = "gcID"]
+  otherVars <- cPools[,.(id = unique(id), ecozone = unique(ecozone)), by = "gcID"]
+  add0s <- fiveOf7cols[otherVars, on = "gcID"]
   cPoolsRaw <- rbindlist(list(cPools,add0s), use.names = TRUE)
   set(cPoolsRaw, NULL, "age", as.numeric(cPoolsRaw$age))
-  setorderv(cPoolsRaw, c("gcids", "age"))
+  setorderv(cPoolsRaw, c("gcID", "age"))
 
-  # 3. Fixing of non-smooth curves
-  message(crayon::red("User: please inspect figures of the raw and smoothed translation of your growth curves in: ",
-                    figPath))
+  # 3. Smooth curves
+  if (P(sim)$smooth){
 
-  # Smooth curves
-  cPoolsClean <- cumPoolsSmooth(cPoolsRaw
-                                  ) |> Cache()
+    data.table:::setnames(cPoolsRaw, "gcID", "gcids")
+    cPoolsClean <- cumPoolsSmooth(cPoolsRaw) |> Cache()
+    data.table:::setnames(cPoolsClean, "gcids", "gcID")
+
+  }else{
+
+    cPoolsClean <- cPoolsRaw
+    cPoolsClean[, totMerch_New := totMerch]
+    cPoolsClean[, fol_New      := fol]
+    cPoolsClean[, other_New    := other]
+  }
 
   #Note: this will produce a warning if one of the curve smoothing efforts doesn't converge
-  cPoolsSmoothPlot <- m3ToBiomPlots(inc = cPoolsClean,
-                                    title = "Cumulative merch/fol/other by gcid")
-  for (i in seq_along(cPoolsSmoothPlot)){
-  SpaDES.core::Plots(cPoolsSmoothPlot[[i]],
-                     filename = paste0("cPools_smoothed_postChapmanRichards_", i, ".png"),
-                     path = figPath,
-                     ggsaveArgs = list(width = 10, height = 5, units = "in", dpi = 300),
-                     types = "png")
+  if (P(sim)$.plot){
+
+    cPoolsClean[, gcids := gcID]
+    cPoolsSmoothPlot <- m3ToBiomPlots(inc = cPoolsClean,
+                                      title = "Cumulative merch/fol/other by gcid")
+
+    for (i in seq_along(cPoolsSmoothPlot)){
+      SpaDES.core::Plots(cPoolsSmoothPlot[[i]],
+                         filename = paste0("cPools_smoothed_postChapmanRichards_", i, ".png"),
+                         path = P(sim)$.plotPath,
+                         ggsaveArgs = list(width = 10, height = 5, units = "in", dpi = 300),
+                         types = "png")
+    }
+
+    message(crayon::red(
+      "User: please review plots of raw and smoothed translations of growth curves: ",
+      P(sim)$.plotPath))
   }
 
   ## keeping the new curves - at this point they are still cumulative
@@ -339,59 +343,50 @@ Vol2Biomass <- function(sim){
   cPoolsClean <- copy(cPoolsClean) #TEMP FIX: making a copy of this table deals with the shallow table warning that happens in the line below.
   ## This warning likely originates from how the table is dealt with in cumPoolsSmooth or cumPoolsCreate.
   cPoolsClean[, (incCols) := lapply(.SD, function(x) c(NA, diff(x))), .SDcols = colNames,
-                by = eval("gcids")]
-  colsToUse33 <- c("age", "gcids", incCols)
-  rawIncPlots <- m3ToBiomPlots(inc = cPoolsClean[, ..colsToUse33],
-                               title = "Increments")
-  for (i in seq_along(rawIncPlots)){
-  SpaDES.core::Plots(rawIncPlots[[i]],
-                     filename = paste0("increments_", i, ".png"),
-                     path = figPath,
-                     ggsaveArgs = list(width = 10, height = 5, units = "in", dpi = 300),
-                     types = "png")
-}
+                by = "gcID"]
 
   sim$cPoolsClean <- cPoolsClean
 
-  # 4. add sw/hw flag
-  colsToUseForestType <- c("sw_hw", "gcids")
-  forestType <- unique(sim$gcMeta[, ..colsToUseForestType])
+  if (P(sim)$.plot){
 
-  #       # cbmTables$forest_type
-  #       # id           name
-  #       # 1  1       Softwood
-  #       # 2  2      Mixedwood
-  #       # 3  3       Hardwood
-  #       # 4  9 Not Applicable
+    colsToUse33 <- c("age", "gcids", incCols)
+    rawIncPlots <- m3ToBiomPlots(inc = sim$cPoolsClean[, ..colsToUse33],
+                                 title = "Increments")
+    for (i in seq_along(rawIncPlots)){
+      SpaDES.core::Plots(rawIncPlots[[i]],
+                         filename = paste0("increments_", i, ".png"),
+                         path = P(sim)$.plotPath,
+                         ggsaveArgs = list(width = 10, height = 5, units = "in", dpi = 300),
+                         types = "png")
+    }
 
-  setkeyv(forestType, "gcids")
-  cPoolsClean <- merge(cPoolsClean, forestType, by = "gcids",
-                                     all.x = TRUE, all.y = FALSE)
+    message(crayon::red("User: please review plots of carbon increments: ", P(sim)$.plotPath))
+  }
 
-  # 5. finalize sim$growth_increments table
-  outCols <- c("id", "ecozone", "totMerch", "fol", "other")
-  cPoolsClean[, (outCols) := NULL]
-  keepCols <- c("gcids", "age", "merch_inc", "foliage_inc", "other_inc", "sw_hw")
-  incCols <- c("merch_inc", "foliage_inc", "other_inc")
-  setnames(cPoolsClean,names(cPoolsClean),
-           keepCols)
-  increments <- cPoolsClean[, (incCols) := list(
-    merch_inc, foliage_inc, other_inc
+  # 4. finalize increments table
+  increments <- cPoolsClean[, .(
+    gcID, age,
+    merch_inc   = incMerch,
+    foliage_inc = incFol,
+    other_inc   = incOther
   )]
-  setorderv(increments, c("gcids", "age"))
+  data.table::setkey(increments, gcID, age)
+
+  ## replace increments that are NA with 0s
+  increments[is.na(merch_inc),   merch_inc   := 0]
+  increments[is.na(foliage_inc), foliage_inc := 0]
+  increments[is.na(other_inc),   other_inc   := 0]
+
+  sim$gcIncrements <- increments
 
   # Assertions
   if (isTRUE(P(sim)$doAssertions)) {
     # All should have same min age
-    if (length(unique(increments[, min(age), by = "sw_hw"]$V1)) != 1)
+    if (length(unique(increments[, min(age), by = "gcID"]$V1)) != 1)
       stop("All ages should start at the same age for each curveID")
-    if (length(unique(increments[, max(age), by = "sw_hw"]$V1)) != 1)
+    if (length(unique(increments[, max(age), by = "gcID"]$V1)) != 1)
       stop("All ages should end at the same age for each curveID")
   }
-
-  ## replace increments that are NA with 0s
-  increments[is.na(increments), ] <- 0
-  sim$growth_increments <- increments
 
   # END process growth curves -------------------------------------------------------------------------------
   # ! ----- STOP EDITING ----- ! #
@@ -400,6 +395,9 @@ Vol2Biomass <- function(sim){
 }
 
 .inputObjects <- function(sim) {
+
+  # Set output plot path
+  if (is.na(P(sim)$.plotPath)) P(sim)$.plotPath <- file.path(outputPath(sim), "CBM_vol2biomass_figures")
 
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
   # abbreviation and cbm spatial units and ecoBoudnary id is provided with the
