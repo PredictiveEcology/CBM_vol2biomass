@@ -27,7 +27,7 @@ test_that("Integration: SK", {
       cachePath   = spadesTestPaths$cachePath,
       outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
     ),
-    params = list(CBM_vol2biomass = list(.useCache = FALSE)),
+    params = list(.globals = list(.plots = NA), CBM_vol2biomass = list(.useCache = FALSE)),
 
     require = c("googledrive", "terra"),
 

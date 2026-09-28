@@ -20,7 +20,7 @@ test_that("Module: SK curves: V2", {
       outputPath  = file.path(spadesTestPaths$temp$outputs, projectName),
       testdata    = spadesTestPaths$testdata
     ),
-    params = list(CBM_vol2biomass = list(.useCache = FALSE, .plot = FALSE)),
+    params = list(CBM_vol2biomass = list(.plots = NA, .useCache = FALSE)),
 
     cbmAdmin = read.csv(file.path(paths$testdata, "cbmAdmin.csv")),
 
@@ -100,7 +100,7 @@ test_that("Module: SK curves: V2: without curve smoothing", {
       outputPath  = file.path(spadesTestPaths$temp$outputs, projectName),
       testdata    = spadesTestPaths$testdata
     ),
-    params = list(CBM_vol2biomass = list(.useCache = FALSE, .plot = FALSE, smooth = FALSE)),
+    params = list(CBM_vol2biomass = list(.plots = NA, .useCache = FALSE, smooth = FALSE)),
 
     cbmAdmin = read.csv(file.path(paths$testdata, "cbmAdmin.csv")),
 
