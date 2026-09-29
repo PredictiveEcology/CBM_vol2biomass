@@ -23,8 +23,8 @@ defineModule(sim, list(
   ),
   parameters = rbind(
     defineParameter("smooth",    "logical", TRUE, NA, NA, "Smooth curves with the Chapman Richards equation"),
+    defineParameter(".plots",    "character", "png", NA, NA, "Used by the Plots function to set plot types"),
     defineParameter(".plotPath", "character", NA, NA, NA, "Path to directory for output figures"),
-    defineParameter(".plot",     "logical", TRUE, NA, NA, "Plot input and translated curves"),
     defineParameter(".useCache", "logical", TRUE, NA, NA, "Cache module events")
   ),
   inputObjects = bindrows(
@@ -208,7 +208,7 @@ Vol2Biomass <- function(sim){
   }
 
   # Creates/sets the vol2biomass outputs subfolder (inside the general outputs folder)
-  if (P(sim)$.plot){
+  if (length(na.omit(P(sim)$.plots)) > 0){
 
     volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = curveID, colour = factor(curveID))) +
       geom_line() + labs(colour = "curveID") + theme_bw()
@@ -217,7 +217,7 @@ Vol2Biomass <- function(sim){
                        filename = "volCurves",
                        path = P(sim)$.plotPath,
                        ggsaveArgs = list(width = 7, height = 5, units = "in", dpi = 300),
-                       types = "png")
+                       types = P(sim)$.plots)
 
     message("User: please review plots of input curves: ", P(sim)$.plotPath)
   }
@@ -313,7 +313,7 @@ Vol2Biomass <- function(sim){
   }
 
   #Note: this will produce a warning if one of the curve smoothing efforts doesn't converge
-  if (P(sim)$.plot){
+  if (length(na.omit(P(sim)$.plots)) > 0){
 
     cPoolsClean[, gcids := gcID]
     cPoolsSmoothPlot <- m3ToBiomPlots(inc = cPoolsClean,
@@ -324,7 +324,7 @@ Vol2Biomass <- function(sim){
                          filename = paste0("cPools_smoothed_postChapmanRichards_", i, ".png"),
                          path = P(sim)$.plotPath,
                          ggsaveArgs = list(width = 10, height = 5, units = "in", dpi = 300),
-                         types = "png")
+                         types = P(sim)$.plots)
     }
 
     message(crayon::red(
@@ -347,7 +347,7 @@ Vol2Biomass <- function(sim){
 
   sim$cPoolsClean <- cPoolsClean
 
-  if (P(sim)$.plot){
+  if (length(na.omit(P(sim)$.plots)) > 0){
 
     colsToUse33 <- c("age", "gcids", incCols)
     rawIncPlots <- m3ToBiomPlots(inc = sim$cPoolsClean[, ..colsToUse33],
@@ -357,7 +357,7 @@ Vol2Biomass <- function(sim){
                          filename = paste0("increments_", i, ".png"),
                          path = P(sim)$.plotPath,
                          ggsaveArgs = list(width = 10, height = 5, units = "in", dpi = 300),
-                         types = "png")
+                         types = P(sim)$.plots)
     }
 
     message(crayon::red("User: please review plots of carbon increments: ", P(sim)$.plotPath))
