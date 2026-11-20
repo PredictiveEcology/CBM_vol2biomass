@@ -5,31 +5,19 @@ test_that("Integration: SK", {
 
   ## Run simInit and spades ----
 
+  skip_if(isTRUE(as.logical(Sys.getenv("CI"))) & !"main" %in% Sys.getenv(c("GITHUB_BASE_REF", "GITHUB_REF_NAME")))
+
   # Set up project
-  projectName <- "integration-SK"
-  times       <- list(start = 1985, end = 1985)
-
-  simInitInput <- SpaDES.project::setupProject(
-
-    modules = c(
-      paste0("PredictiveEcology/CBM_defaults@",    Sys.getenv("BRANCH_NAME", "development")),
-      paste0("PredictiveEcology/CBM_dataPrep_SK@", Sys.getenv("BRANCH_NAME", "development")),
-      paste0("PredictiveEcology/CBM_dataPrep@",    Sys.getenv("BRANCH_NAME", "development")),
+  simInitInput <- setupProjectTest(
+    projectName = "integration-SK",
+    times       = list(start = 2026, end = 2026),
+    modules     = c(
+      paste0("PredictiveEcology/CBM_defaults@",    ifelse("main" %in% Sys.getenv(c("GITHUB_BASE_REF", "GITHUB_REF_NAME")), "main", "development")),
+      paste0("PredictiveEcology/CBM_dataPrep_SK@", ifelse("main" %in% Sys.getenv(c("GITHUB_BASE_REF", "GITHUB_REF_NAME")), "main", "development")),
+      paste0("PredictiveEcology/CBM_dataPrep@",    ifelse("main" %in% Sys.getenv(c("GITHUB_BASE_REF", "GITHUB_REF_NAME")), "main", "development")),
       "CBM_vol2biomass",
-      paste0("PredictiveEcology/CBM_core@",        Sys.getenv("BRANCH_NAME", "development"))
+      paste0("PredictiveEcology/CBM_core@",        ifelse("main" %in% Sys.getenv(c("GITHUB_BASE_REF", "GITHUB_REF_NAME")), "main", "development"))
     ),
-    times   = times,
-    paths   = list(
-      projectPath = spadesTestPaths$projectPath,
-      modulePath  = spadesTestPaths$temp$modules,
-      packagePath = spadesTestPaths$packagePath,
-      inputPath   = spadesTestPaths$inputPath,
-      cachePath   = spadesTestPaths$cachePath,
-      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName)
-    ),
-    params = list(.globals = list(.plots = NA), CBM_vol2biomass = list(.useCache = FALSE)),
-
-    require = c("googledrive", "terra"),
 
     masterRaster = terra::rast(
       ext  = c(xmin = -687696, xmax = -681036, ymin = 711955, ymax = 716183),

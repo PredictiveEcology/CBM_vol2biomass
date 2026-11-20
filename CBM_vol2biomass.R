@@ -18,6 +18,7 @@ defineModule(sim, list(
   citation = list("citation.bib"),
   documentation = deparse(list("README.txt", "CBM_vol2biomass.Rmd")),
   reqdPkgs = list(
+    "PredictiveEcology/SpaDES.core", "reproducible (>= 2.1.2)",
     "PredictiveEcology/CBMutils@development (>=2.5.2)",
     "ggforce", "ggplot2", "ggpubr", "mgcv", "quickPlot", "robustbase", "data.table", "patchwork"
   ),
