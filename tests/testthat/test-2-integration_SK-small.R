@@ -5,7 +5,7 @@ test_that("Integration: SK", {
 
   ## Run simInit and spades ----
 
-  skip_if(isTRUE(as.logical(Sys.getenv("CI"))) & !"main" %in% Sys.getenv(c("GITHUB_BASE_REF", "GITHUB_REF_NAME")))
+  skip_if(!"main" %in% Sys.getenv(c("GITHUB_BASE_REF", "GITHUB_REF_NAME")))
 
   # Set up project
   simInitInput <- setupProjectTest(
