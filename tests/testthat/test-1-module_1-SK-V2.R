@@ -120,7 +120,7 @@ test_that("Module: SK curves: V2: without curve smoothing", {
   expect_s4_class(simTest, "simList")
 
   # Check output 'gcIncrements'
-  rawConvert <- data.table::fread(file.path(spadesTestPaths$testdata, "SK_v2", "convertM3biom_SK_9_Trembling aspen_P.csv"))
+  rawConvert <- readRDS(file.path(spadesTestPaths$testdata, "SK_v2", "convertM3biom_SK_9_Trembling aspen_P.rds"))
   expect_equal(simTest$gcIncrements[, merch_inc],   c(0, rawConvert[, totMerch]))
   expect_equal(simTest$gcIncrements[, foliage_inc], c(0, rawConvert[, fol]))
   expect_equal(simTest$gcIncrements[, other_inc],   c(0, rawConvert[, other]))
@@ -130,17 +130,12 @@ test_that("Module: SK curves: V2: without curve smoothing", {
   #   meta     = data.table::data.table(gcids = 1, spatial_unit_id = 28, species = "Trembling aspen"),
   #   gCvalues = data.table::data.table(gcids = 1, simTestInit$userGcM3[curveID == 7,]),
   #   spsMatch = data.table::data.table(species = "Trembling aspen", canfi_species = 1201, genus = "POPU"),
-  #   ecozones = data.table::data.table(simTestInit$cbmAdmin),
-  #   params3  = simTestInit$table3,
-  #   params4  = simTestInit$table4,
-  #   params5  = simTestInit$table5,
-  #   params6  = simTestInit$table6,
-  #   params7  = simTestInit$table7
+  #   ecozones = data.table::data.table(simTestInit$cbmAdmin)
   # )
   # rawConvert <- rbind(c(0, 0, 0), rawConvert)
   # rawConvert <- diff(rawConvert * 0.5)
-  # write.csv(rawConvert, file.path(spadesTestPaths$testdata, "SK_v2", "convertM3biom_SK_9_Trembling aspen_P.csv"),
-  #           row.names = FALSE, quote = FALSE)
+  # rawConvert <- data.table::as.data.table(rawConvert)
+  # saveRDS(rawConvert, file.path(spadesTestPaths$testdata, "SK_v2", "convertM3biom_SK_9_Trembling aspen_P.rds"))
 
 })
 
