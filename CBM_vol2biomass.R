@@ -17,6 +17,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = deparse(list("README.txt", "CBM_vol2biomass.Rmd")),
+  loadOrder = list(after = c("CBM_defaults", "CBM_dataPrep"), before = c("CBM_core")),
   reqdPkgs = list(
     "PredictiveEcology/CBMutils@development (>=2.5.2)",
     "ggforce", "ggplot2", "ggpubr", "mgcv", "quickPlot", "robustbase", "data.table", "patchwork"
