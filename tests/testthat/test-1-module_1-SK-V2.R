@@ -5,32 +5,21 @@ test_that("Module: SK curves: V2", {
 
   ## Run simInit and spades ----
 
-  # Set up project
-  projectName <- "1-SK-V2"
+  simInitInput <- setupProjectTest(
+    projectName = "1-SK-V2",
+    times       = list(start = 2026, end = 2026),
 
-  simInitInput <- SpaDES.project::setupProject(
-
-    modules = "CBM_vol2biomass",
-    paths   = list(
-      projectPath = spadesTestPaths$projectPath,
-      modulePath  = spadesTestPaths$modulePath,
-      packagePath = spadesTestPaths$packagePath,
-      inputPath   = spadesTestPaths$inputPath,
-      cachePath   = spadesTestPaths$cachePath,
-      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName),
-      testdata    = spadesTestPaths$testdata
-    ),
     params = list(CBM_vol2biomass = list(.plots = NA, .useCache = FALSE)),
 
-    cbmAdmin = read.csv(file.path(paths$testdata, "cbmAdmin.csv")),
+    cbmAdmin = read.csv(file.path(test_path("testdata"), "cbmAdmin.csv")),
 
     userGcLocations = rbind(
       data.frame(admin_abbrev = "SK", eco_id = 6, species = "Trembling aspen", prodClass = "M"),
       data.frame(admin_abbrev = "SK", eco_id = 9, species = "Trembling aspen", prodClass = "P"),
       data.frame(admin_abbrev = "SK", eco_id = 9, species = "Jack pine",       prodClass = "P")
     ),
-    userGcMeta = read.csv(file.path(paths$testdata, "SK_v2", "userGcMeta.csv")),
-    userGcM3   = read.csv(file.path(paths$testdata, "SK_v2", "userGcM3.csv"))
+    userGcMeta = read.csv(file.path(test_path("testdata"), "SK_v2", "userGcMeta.csv")),
+    userGcM3   = read.csv(file.path(test_path("testdata"), "SK_v2", "userGcM3.csv"))
   )
 
   # Run simInit
@@ -85,30 +74,19 @@ test_that("Module: SK curves: V2: without curve smoothing", {
 
   ## Run simInit and spades ----
 
-  # Set up project
-  projectName <- "1-SK-V2-raw"
+  simInitInput <- setupProjectTest(
+    projectName = "1-SK-V2-raw",
+    times       = list(start = 2026, end = 2026),
 
-  simInitInput <- SpaDES.project::setupProject(
-
-    modules = "CBM_vol2biomass",
-    paths   = list(
-      projectPath = spadesTestPaths$projectPath,
-      modulePath  = spadesTestPaths$modulePath,
-      packagePath = spadesTestPaths$packagePath,
-      inputPath   = spadesTestPaths$inputPath,
-      cachePath   = spadesTestPaths$cachePath,
-      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName),
-      testdata    = spadesTestPaths$testdata
-    ),
     params = list(CBM_vol2biomass = list(.plots = NA, .useCache = FALSE, smooth = FALSE)),
 
-    cbmAdmin = read.csv(file.path(paths$testdata, "cbmAdmin.csv")),
+    cbmAdmin = read.csv(file.path(test_path("testdata"), "cbmAdmin.csv")),
 
     userGcLocations = rbind(
       data.frame(admin_abbrev = "SK", eco_id = 9, species = "Trembling aspen", prodClass = "P")
     ),
-    userGcMeta = read.csv(file.path(paths$testdata, "SK_v2", "userGcMeta.csv")),
-    userGcM3   = read.csv(file.path(paths$testdata, "SK_v2", "userGcM3.csv"))
+    userGcMeta = read.csv(file.path(test_path("testdata"), "SK_v2", "userGcMeta.csv")),
+    userGcM3   = read.csv(file.path(test_path("testdata"), "SK_v2", "userGcM3.csv"))
   )
 
   # Run simInit
@@ -120,7 +98,7 @@ test_that("Module: SK curves: V2: without curve smoothing", {
   expect_s4_class(simTest, "simList")
 
   # Check output 'gcIncrements'
-  rawConvert <- readRDS(file.path(spadesTestPaths$testdata, "SK_v2", "convertM3biom_SK_9_Trembling aspen_P.rds"))
+  rawConvert <- readRDS(file.path(test_path("testdata"), "SK_v2", "convertM3biom_SK_9_Trembling aspen_P.rds"))
   expect_equal(simTest$gcIncrements[, merch_inc],   c(0, rawConvert[, totMerch]))
   expect_equal(simTest$gcIncrements[, foliage_inc], c(0, rawConvert[, fol]))
   expect_equal(simTest$gcIncrements[, other_inc],   c(0, rawConvert[, other]))
@@ -135,7 +113,7 @@ test_that("Module: SK curves: V2: without curve smoothing", {
   # rawConvert <- rbind(c(0, 0, 0), rawConvert)
   # rawConvert <- diff(rawConvert * 0.5)
   # rawConvert <- data.table::as.data.table(rawConvert)
-  # saveRDS(rawConvert, file.path(spadesTestPaths$testdata, "SK_v2", "convertM3biom_SK_9_Trembling aspen_P.rds"))
+  # saveRDS(rawConvert, file.path(test_path("testdata"), "SK_v2", "convertM3biom_SK_9_Trembling aspen_P.rds"))
 
 })
 

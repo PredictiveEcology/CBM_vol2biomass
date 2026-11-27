@@ -5,28 +5,15 @@ test_that("Module: SK curves: V1", {
 
   ## Run simInit and spades ----
 
-  # Set up project
-  projectName <- "1-SK-V1"
+  simInitInput <- setupProjectTest(
+    projectName = "1-SK-V1",
+    times       = list(start = 2026, end = 2026),
 
-  simInitInput <- SpaDES.project::setupProject(
-
-    modules = "CBM_vol2biomass",
-    paths   = list(
-      projectPath = spadesTestPaths$projectPath,
-      modulePath  = spadesTestPaths$modulePath,
-      packagePath = spadesTestPaths$packagePath,
-      inputPath   = spadesTestPaths$inputPath,
-      cachePath   = spadesTestPaths$cachePath,
-      outputPath  = file.path(spadesTestPaths$temp$outputs, projectName),
-      testdata    = spadesTestPaths$testdata
-    ),
-    params = list(CBM_vol2biomass = list(.useCache = FALSE)),
-
-    cbmAdmin = read.csv(file.path(paths$testdata, "cbmAdmin.csv")),
+    cbmAdmin = read.csv(file.path(test_path("testdata"), "cbmAdmin.csv")),
 
     userGcLocations = data.frame(admin_abbrev = "SK", eco_id = 9, curveID = 55),
-    userGcMeta = read.csv(file.path(paths$testdata, "SK_v1", "userGcMeta.csv")),
-    userGcM3   = read.csv(file.path(paths$testdata, "SK_v1", "userGcM3.csv"))
+    userGcMeta = read.csv(file.path(test_path("testdata"), "SK_v1", "userGcMeta.csv")),
+    userGcM3   = read.csv(file.path(test_path("testdata"), "SK_v1", "userGcM3.csv"))
   )
 
   # Run simInit
